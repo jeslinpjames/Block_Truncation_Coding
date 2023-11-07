@@ -41,7 +41,17 @@ def BTC(img, block_size=4):
                 print(block)
                 blocks.append(block)
                 count += 1
-       
+        compressed_blocks = []
+        for i, block in enumerate(blocks):
+            mean = np.mean(block)
+            variance=  np.var(block)
+            a=int(mean-variance)
+            b=int(mean+variance)
+            threshold=a+b//2
+            
+
+           
+        
         
 
 
