@@ -37,22 +37,25 @@ def BTC(img, block_size=4):
         for i in range(0, height, block_size):
             for j in range(0, width, block_size):
                 block = img[i:i+block_size, j:j+block_size]
-                print("_________ ", count, " ___________")
-                print(block)
                 blocks.append(block)
                 count += 1
+        
         compressed_blocks = []
         for i, block in enumerate(blocks):
             mean = np.mean(block)
-            variance=  np.var(block)
-            a=int(mean-variance)
-            b=int(mean+variance)
-            threshold=a+b//2
-            
+            variance = np.var(block)
+            a = int(mean - variance)
+            b = int(mean + variance)
+            threshold = (a + b) // 2
+            binary_block = (block >= threshold).astype(np.uint8)
+            compressed_blocks.append(binary_block)
 
-           
-        
-        
+        reconstructed_image = np.zeros((height, width), dtype=np.uint8)
+        for k, block in enumerate(compressed_blocks):
+            
+        # Display the compressed image
+        display_image(reconstructed_image)
+        save_image(reconstructed_image, "D:/git/Image_Compression_with_SVD/compressed_img.jpeg")
 
 
 if __name__=="__main__":
