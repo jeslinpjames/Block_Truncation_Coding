@@ -32,7 +32,7 @@ def save_image(img,path):
 def save_encoded_data(encoded_data, path):
     if encoded_data :
         with open(path, 'wb')as f:
-            f.write(msgpack.packb(encoded_data, use_bin_type=True)))
+            f.write(msgpack.packb(encoded_data, use_bin_type=True))
         print("Encoded data saved successfully")
     else:
         print("Encoded data not found")
@@ -121,7 +121,7 @@ def reconstruct_BTC(encoded_data):
 
 
 if __name__=="__main__":
-    img = load_image("D:/git/Image_Compression_with_SVD/img_2.jpeg")
+    img = load_image("D:/git/Block_Truncation_Coding/img_2.jpeg")
     # display_image(img)
     if img is not None:
         zoomed_out_img = cv2.resize(img, None, fx=0.3, fy=0.3, interpolation=cv2.INTER_LINEAR)
@@ -136,8 +136,8 @@ if __name__=="__main__":
             [31, 32, 33, 34, 35, 36]
         ])
         encoded_data=encode_BTC(img,4)
-        # save_encoded_data(encoded_data,"D:/git/Image_Compression_with_SVD/encoded_data.json")
-        encoded_data=load_encoded_data("D:/git/Image_Compression_with_SVD/encoded_data.json")
+        save_encoded_data(encoded_data,"D:/git/Block_Truncation_Coding/compressed.json")
+        encoded_data=load_encoded_data("D:/git/Block_Truncation_Coding/compressed.json")
         reconstructed_image=reconstruct_BTC(encoded_data)
-        save_image(reconstructed_image, "D:/git/Image_Compression_with_SVD/compressed_img23.jpeg")
+        save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/compressed_img_2.jpeg")
 
