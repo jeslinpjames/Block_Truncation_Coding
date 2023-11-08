@@ -36,7 +36,17 @@ def save_encoded_data(encoded_data, path):
         print("Encoded data saved successfully")
     else:
         print("Encoded data not found")
-        
+
+def load_encoded_data(path):
+    try:
+        with open(path,'r')as f:
+            encoded_data = json.load(f)
+        return encoded_data
+    except Exception as e:
+        print("Error in loading encoded data")
+        print(e)
+        return None
+
 def encode_BTC(img, block_size=4):
     if img is not None:
         height, width = img.shape
