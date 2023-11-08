@@ -1,4 +1,5 @@
 import cv2
+import json
 import numpy as np
 
 def load_image(path):
@@ -28,7 +29,7 @@ def save_image(img,path):
     else:
         print("Image not found")
 
-def BTC(img, block_size=4):
+def encode_BTC(img, block_size=4):
     if img is not None:
         height, width = img.shape
         count = 0
@@ -39,8 +40,11 @@ def BTC(img, block_size=4):
                 block = img[i:i+block_size, j:j+block_size]
                 blocks.append(block)
                 count += 1
-        
-        compressed_blocks = []
+            encoded_data={
+            'block_size':block_size,
+            'thresholds': [],
+            'quantized_data': []
+        }
         for i, block in enumerate(blocks):
             mean = np.mean(block)
             variance = np.var(block)
@@ -48,14 +52,22 @@ def BTC(img, block_size=4):
             b = int(mean + variance)
             threshold = (a + b) // 2
             binary_block = (block >= threshold).astype(np.uint8)
-            compressed_blocks.append(binary_block)
+            encoded_data['thresholds'].append(threshold)
+            encoded_data['quantized_data'].append(binary_block.tolist())
+        return encoded_data
 
-        reconstructed_image = np.zeros((height, width), dtype=np.uint8)
-        for k, block in enumerate(compressed_blocks):
-            
-        # Display the compressed image
-        display_image(reconstructed_image)
-        save_image(reconstructed_image, "D:/git/Image_Compression_with_SVD/compressed_img.jpeg")
+def reconstruct_image(compressed_blocks, img_height, img_width, block_size):
+    reconstructed_image = np.zeros((img_height, img_width), dtype=np.uint8)
+    block_idx = 0
+
+    for i in range(0, img_height, block_size):
+        for j in range(0, img_width, block_size):
+            binary_block = compressed_blocks[block_idx]
+            reconstructed_image[i:i+block_size, j:j+block_size] = binary_block
+            block_idx += 1
+
+    return reconstructed_image
+
 
 
 if __name__=="__main__":
@@ -73,4 +85,7 @@ if __name__=="__main__":
             [25, 26, 27, 28, 29, 30],
             [31, 32, 33, 34, 35, 36]
         ])
-        BTC(img,10)
+        compressed_blocks=encode_BTC(img,4)
+        reconstructed_image = reconstruct_image(compressed_blocks, img.shape[0], img.shape[1], 4)
+        save_image(reconstructed_image, "D:/git/Image_Compression_with_SVD/compressed_img23.jpeg")
+
