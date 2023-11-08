@@ -74,17 +74,49 @@ def encode_BTC(img, block_size=4):
             encoded_data['quantized_data'].append(binary_block.tolist())
         return encoded_data
 
-def reconstruct_image(compressed_blocks, img_height, img_width, block_size):
-    reconstructed_image = np.zeros((img_height, img_width), dtype=np.uint8)
-    block_idx = 0
+# def reconstruct_BTC(encoded_data):
+#     if encoded_data:
+#         block_size = encoded_data['block_size']
+#         thresholds = encoded_data['thresholds']
+#         quantized_data = encoded_data['quantized_data']
+#         img_height = block_size * len(quantized_data)
+#         img_width = block_size * len(quantized_data[0])
 
-    for i in range(0, img_height, block_size):
-        for j in range(0, img_width, block_size):
-            binary_block = compressed_blocks[block_idx]
-            reconstructed_image[i:i+block_size, j:j+block_size] = binary_block
-            block_idx += 1
+#         reconstructed_image = np.zeros((img_height, img_width), dtype=np.uint8)
+#         block_id = 0
 
-    return reconstructed_image
+#         for i in range(0,img_height,block_size):
+#             for j in range(0, img_width,block_size):
+#                 threshold = thresholds[block_id]
+#                 binary_block = np.array(quantized_data[block_id])
+#                 a = threshold - (block_size // 2)
+#                 b = threshold + (block_size // 2)
+#                 reconstructed_block = (binary_block * (b - a) + a).astype(np.uint8)
+#                 reconstructed_image[i:i+block_size, j:j+block_size] = reconstructed_block
+#             block_id += 1
+#     return reconstructed_image
+
+def reconstruct_BTC(encoded_data):
+    if encoded_data:
+        block_size = encoded_data['block_size']
+        thresholds = encoded_data['thresholds']
+        quantized_data = encoded_data['quantized_data']
+        img_height = block_size * len(quantized_data)
+        img_width = block_size * len(quantized_data[0])
+
+        reconstructed_image = np.zeros((img_height, img_width), dtype=np.uint8)
+        block_id = 0
+
+        for i in range(0, img_height, block_size):
+            for j in range(0, img_width, block_size):
+                threshold = thresholds[block_id]
+                binary_block = np.array(quantized_data[block_id])
+                a = threshold - (block_size // 2)
+                b = threshold + (block_size // 2)
+                reconstructed_block = (binary_block * (b - a) + a).astype(np.uint8)
+                reconstructed_image[i:i+block_size, j:j+block_size] = reconstructed_block
+                block_id += 1  
+        return reconstructed_image
 
 
 
@@ -103,7 +135,9 @@ if __name__=="__main__":
             [25, 26, 27, 28, 29, 30],
             [31, 32, 33, 34, 35, 36]
         ])
-        compressed_blocks=encode_BTC(img,4)
-        reconstructed_image = reconstruct_image(compressed_blocks, img.shape[0], img.shape[1], 4)
+        encoded_data=encode_BTC(img,4)
+        # save_encoded_data(encoded_data,"D:/git/Image_Compression_with_SVD/encoded_data.json")
+        encoded_data=load_encoded_data("D:/git/Image_Compression_with_SVD/encoded_data.json")
+        reconstructed_image=reconstruct_BTC(encoded_data)
         save_image(reconstructed_image, "D:/git/Image_Compression_with_SVD/compressed_img23.jpeg")
 
