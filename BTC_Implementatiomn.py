@@ -29,6 +29,14 @@ def save_image(img,path):
     else:
         print("Image not found")
 
+def save_encoded_data(encoded_data, path):
+    if encoded_data :
+        with open(path, 'w')as f:
+            json.dump(encoded_data,f)
+        print("Encoded data saved successfully")
+    else:
+        print("Encoded data not found")
+        
 def encode_BTC(img, block_size=4):
     if img is not None:
         height, width = img.shape
