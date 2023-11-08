@@ -47,32 +47,26 @@ def load_encoded_data(path):
         print(e)
         return None
 
+
 def encode_BTC(img, block_size=4):
     if img is not None:
         height, width = img.shape
-        count = 0
-        blocks = []
-
+        encoded_data={
+            'block_size':block_size,
+            'mean': [],
+            'variance':[],
+            'quantized_data': []
+        }
         for i in range(0, height, block_size):
             for j in range(0, width, block_size):
                 block = img[i:i+block_size, j:j+block_size]
-                blocks.append(block)
-                count += 1
-            encoded_data={
-            'block_size':block_size,
-            'thresholds': [],
-            'quantized_data': []
-        }
-        for i, block in enumerate(blocks):
-            mean = np.mean(block)
-            variance = np.var(block)
-            a = int(mean - variance)
-            b = int(mean + variance)
-            threshold = (a + b) // 2
-            binary_block = (block >= threshold).astype(np.uint8)
-            encoded_data['thresholds'].append(threshold)
-            encoded_data['quantized_data'].append(binary_block.tolist())
-        return encoded_data
+                mean = np.mean(block)
+                variance = np.var(block)
+                binary_block = (block >= mean).astype(np.uint8)
+                encoded_data['mean'].append(mean)
+                encoded_data['variance'].append(variance)
+                encoded_data['quantized_data'].append(binary_block.tolist())            
+    return encoded_data
 
 # def reconstruct_BTC(encoded_data):
 #     if encoded_data:
