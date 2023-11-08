@@ -1,5 +1,5 @@
 import cv2
-import json
+import msgpack
 import numpy as np
 
 def load_image(path):
@@ -31,16 +31,16 @@ def save_image(img,path):
 
 def save_encoded_data(encoded_data, path):
     if encoded_data :
-        with open(path, 'w')as f:
-            json.dump(encoded_data,f)
+        with open(path, 'wb')as f:
+            f.write(msgpack.packb(encoded_data, use_bin_type=True)))
         print("Encoded data saved successfully")
     else:
         print("Encoded data not found")
 
 def load_encoded_data(path):
     try:
-        with open(path,'r')as f:
-            encoded_data = json.load(f)
+        with open(path,'rb')as f:
+            encoded_data = msgpack.unpackb(f.read(), raw=False)
         return encoded_data
     except Exception as e:
         print("Error in loading encoded data")
