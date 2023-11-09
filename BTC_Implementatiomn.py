@@ -63,32 +63,11 @@ def encode_BTC(img, block_size=4):
                 mean = np.mean(block)
                 variance = np.var(block)
                 binary_block = (block >= mean).astype(np.uint8)
+                packed_binary_block = np.packbits(binary_block)
                 encoded_data['mean'].append(mean)
                 encoded_data['variance'].append(variance)
-                encoded_data['quantized_data'].append(binary_block.tolist())            
+                encoded_data['quantized_data'].append(packed_binary_block.tolist())            
     return encoded_data
-
-# def reconstruct_BTC(encoded_data):
-#     if encoded_data:
-#         block_size = encoded_data['block_size']
-#         thresholds = encoded_data['thresholds']
-#         quantized_data = encoded_data['quantized_data']
-#         img_height = block_size * len(quantized_data)
-#         img_width = block_size * len(quantized_data[0])
-
-#         reconstructed_image = np.zeros((img_height, img_width), dtype=np.uint8)
-#         block_id = 0
-
-#         for i in range(0,img_height,block_size):
-#             for j in range(0, img_width,block_size):
-#                 threshold = thresholds[block_id]
-#                 binary_block = np.array(quantized_data[block_id])
-#                 a = threshold - (block_size // 2)
-#                 b = threshold + (block_size // 2)
-#                 reconstructed_block = (binary_block * (b - a) + a).astype(np.uint8)
-#                 reconstructed_image[i:i+block_size, j:j+block_size] = reconstructed_block
-#             block_id += 1
-#     return reconstructed_image
 
 def reconstruct_BTC(encoded_data):
     if encoded_data:
