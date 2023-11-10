@@ -53,6 +53,7 @@ def encode_BTC(img, block_size=4):
         height, width = img.shape
         encoded_data={
             'block_size':block_size,
+            'img_shape': img.shape,
             'mean': [],
             'variance':[],
             'quantized_data': []
@@ -61,12 +62,14 @@ def encode_BTC(img, block_size=4):
             for j in range(0, width, block_size):
                 block = img[i:i+block_size, j:j+block_size]
                 mean = np.mean(block)
-                variance = np.var(block)
+                variance = np.std(block)
+                mean = int(np.clip(mean,0,255).astype(np.uint8))
+                variance = int(np.clip(variance,0,255).astype(np.uint8))
                 binary_block = (block >= mean).astype(np.uint8)
-                packed_binary_block = np.packbits(binary_block)
+                # packed_binary_block = np.packbits(binary_block)
                 encoded_data['mean'].append(mean)
                 encoded_data['variance'].append(variance)
-                encoded_data['quantized_data'].append(packed_binary_block.tolist())            
+                encoded_data['quantized_data'].append(binary_block.tolist())            
     return encoded_data
 
 def reconstruct_BTC(encoded_data):
