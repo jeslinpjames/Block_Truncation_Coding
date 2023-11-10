@@ -75,23 +75,41 @@ def encode_BTC(img, block_size=4):
 def reconstruct_BTC(encoded_data):
     if encoded_data:
         block_size = encoded_data['block_size']
-        thresholds = encoded_data['thresholds']
+        img_height, img_width = encoded_data['img_shape']
+        means = encoded_data['mean']
+        variances = encoded_data['variance']
         quantized_data = encoded_data['quantized_data']
-        img_height = block_size * len(quantized_data)
-        img_width = block_size * len(quantized_data[0])
-
         reconstructed_image = np.zeros((img_height, img_width), dtype=np.uint8)
         block_id = 0
 
         for i in range(0, img_height, block_size):
             for j in range(0, img_width, block_size):
-                threshold = thresholds[block_id]
-                binary_block = np.array(quantized_data[block_id])
-                a = threshold - (block_size // 2)
-                b = threshold + (block_size // 2)
-                reconstructed_block = (binary_block * (b - a) + a).astype(np.uint8)
-                reconstructed_image[i:i+block_size, j:j+block_size] = reconstructed_block
-                block_id += 1  
+                # packed_binary_block = np.array(quantized_data[block_id], dtype=np.uint8)
+                # binary_block = np.unpackbits(packed_binary_block)
+                binary_block = np.array(quantized_data[block_id], dtype=np.uint8)
+                q = np.sum(binary_block)
+                if q != 0 and q != block_size**2:
+                    mean = means[block_id]
+                    variance = variances[block_id]
+                    # q = np.sum(binary_block)
+                    m = block_size * block_size
+
+                    # Compute 'a' and 'b'
+                    a = int(mean - variance * np.sqrt(q / (m - q)))
+                    b = int(mean + variance * np.sqrt(m - q) / q)
+
+                    # Use 'a' and 'b' to reconstruct the block
+                    binary_block = binary_block.reshape((block_size, block_size))
+                    reconstructed_block = np.zeros((block_size, block_size), dtype=np.uint8)
+                    for k in range(block_size):
+                        for l in range(block_size):
+                            if binary_block[k, l] == 1:  # Changed to single indexing (comma)
+                                reconstructed_block[k, l] = b
+                            else:
+                                reconstructed_block[k, l] = a
+                    reconstructed_image[i:i + block_size, j:j + block_size] = reconstructed_block
+                    block_id += 1
+
         return reconstructed_image
 
 
