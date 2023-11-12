@@ -1,5 +1,5 @@
 import cv2
-import msgpack
+import pickle
 import numpy as np
 
 def load_image(path):
@@ -103,7 +103,7 @@ def reconstruct_BTC(encoded_data):
                     reconstructed_block = np.zeros((block_size, block_size), dtype=np.uint8)
                     for k in range(block_size):
                         for l in range(block_size):
-                            if binary_block[k, l] == 1:  # Changed to single indexing (comma)
+                            if binary_block[k, l] == 1:  
                                 reconstructed_block[k, l] = b
                             else:
                                 reconstructed_block[k, l] = a
@@ -122,16 +122,19 @@ if __name__=="__main__":
         # display_image(zoomed_out_img)
         print("Original Image Shape: ",img.shape)
         matrix = np.array([
-            [1, 2, 3, 4, 5, 6],
-            [7, 8, 9, 10, 11, 12],
-            [13, 14, 15, 16, 17, 18],
-            [19, 20, 21, 22, 23, 24],
-            [25, 26, 27, 28, 29, 30],
-            [31, 32, 33, 34, 35, 36]
-        ])
+        [135, 42, 201, 173, 94, 117, 55, 208],
+        [30, 183, 70, 150, 42, 88, 123, 77],
+        [101, 162, 44, 95, 200, 35, 217, 124],
+        [72, 56, 91, 13, 246, 180, 37, 64],
+        [141, 232, 105, 168, 49, 87, 112, 19],
+        [234, 99, 38, 78, 91, 221, 72, 53],
+        [193, 11, 75, 63, 234, 150, 194, 87],
+        [94, 201, 245, 168, 5, 113, 45, 142]
+        ], dtype=np.uint8)
         encoded_data=encode_BTC(img,4)
-        save_encoded_data(encoded_data,"D:/git/Block_Truncation_Coding/compressed.json")
-        encoded_data=load_encoded_data("D:/git/Block_Truncation_Coding/compressed.json")
+        save_encoded_data(encoded_data,"D:/git/Block_Truncation_Coding/compressed.pkl")
+        encoded_data=load_encoded_data("D:/git/Block_Truncation_Coding/compressed.pkl")
         reconstructed_image=reconstruct_BTC(encoded_data)
+        print(reconstructed_image)
         save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/compressed_img_2.jpeg")
 
