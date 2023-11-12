@@ -29,18 +29,19 @@ def save_image(img,path):
     else:
         print("Image not found")
 
+ 
 def save_encoded_data(encoded_data, path):
-    if encoded_data :
-        with open(path, 'wb')as f:
-            f.write(msgpack.packb(encoded_data, use_bin_type=True))
-        print("Encoded data saved successfully")
+    if encoded_data:
+        with open(path, 'wb') as f:
+            pickle.dump(encoded_data, f)
+        print("Encoded data saved successfully as a .pkl file")
     else:
         print("Encoded data not found")
 
 def load_encoded_data(path):
     try:
-        with open(path,'rb')as f:
-            encoded_data = msgpack.unpackb(f.read(), raw=False)
+        with open(path, 'rb') as f:
+            encoded_data = pickle.load(f)
         return encoded_data
     except Exception as e:
         print("Error in loading encoded data")
