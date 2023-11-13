@@ -1,5 +1,6 @@
 import cv2
 import pickle
+import json
 import numpy as np
 
 def load_image(path):
@@ -67,7 +68,7 @@ def encode_BTC(img, block_size=4):
                 mean = int(np.clip(mean,0,255).astype(np.uint8))
                 variance = int(np.clip(variance,0,255).astype(np.uint8))
                 binary_block = (block >= mean).astype(np.uint8)
-                # packed_binary_block = np.packbits(binary_block)
+                packed_binary_block = np.packbits(binary_block)
                 encoded_data['mean'].append(mean)
                 encoded_data['variance'].append(variance)
                 encoded_data['quantized_data'].append(binary_block.tolist())            
@@ -82,47 +83,46 @@ def reconstruct_BTC(encoded_data):
         quantized_data = encoded_data['quantized_data']
         reconstructed_image = np.zeros((img_height, img_width), dtype=np.uint8)
         block_id = 0
-
+        
         for i in range(0, img_height, block_size):
             for j in range(0, img_width, block_size):
-                # packed_binary_block = np.array(quantized_data[block_id], dtype=np.uint8)
-                # binary_block = np.unpackbits(packed_binary_block)
                 binary_block = np.array(quantized_data[block_id], dtype=np.uint8)
+                
                 q = np.sum(binary_block)
+                mean = means[block_id]
+                variance = variances[block_id]
+                q = np.sum(binary_block)
+                m = block_size * block_size
                 if q != 0 and q != block_size**2:
-                    mean = means[block_id]
-                    variance = variances[block_id]
-                    # q = np.sum(binary_block)
-                    m = block_size * block_size
-
                     # Compute 'a' and 'b'
                     a = int(mean - variance * np.sqrt(q / (m - q)))
                     b = int(mean + variance * np.sqrt(m - q) / q)
-
-                    # Use 'a' and 'b' to reconstruct the block
-                    binary_block = binary_block.reshape((block_size, block_size))
-                    reconstructed_block = np.zeros((block_size, block_size), dtype=np.uint8)
-                    for k in range(block_size):
-                        for l in range(block_size):
-                            if binary_block[k, l] == 1:  
-                                reconstructed_block[k, l] = b
-                            else:
-                                reconstructed_block[k, l] = a
-                    reconstructed_image[i:i + block_size, j:j + block_size] = reconstructed_block
-                    block_id += 1
+                else:
+                    # Compute 'a' and 'b'
+                    a = int(mean - variance)
+                    b = int(mean + variance)
+                # Use 'a' and 'b' to reconstruct the block
+                binary_block = binary_block.reshape((block_size, block_size))
+                reconstructed_block = np.zeros((block_size, block_size), dtype=np.uint8)
+                for k in range(block_size):
+                    for l in range(block_size):
+                        if binary_block[k, l] == 1:  
+                            reconstructed_block[k, l] = b
+                        else:
+                            reconstructed_block[k, l] = a
+                reconstructed_image[i:i + block_size, j:j + block_size] = reconstructed_block
+                block_id += 1
+                    
 
         return reconstructed_image
-
 
 
 if __name__=="__main__":
     img = load_image("D:/git/Block_Truncation_Coding/img_2.jpeg")
     # display_image(img)
     if img is not None:
-        zoomed_out_img = cv2.resize(img, None, fx=0.3, fy=0.3, interpolation=cv2.INTER_LINEAR)
-        # display_image(zoomed_out_img)
         print("Original Image Shape: ",img.shape)
-        matrix = np.array([
+        mat = np.array([
         [135, 42, 201, 173, 94, 117, 55, 208],
         [30, 183, 70, 150, 42, 88, 123, 77],
         [101, 162, 44, 95, 200, 35, 217, 124],
