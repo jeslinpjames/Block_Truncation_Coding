@@ -1,5 +1,6 @@
 import cv2
 import pickle
+from bitarray import bitarray
 import json
 import numpy as np
 
@@ -68,10 +69,13 @@ def encode_BTC(img, block_size=4):
                 mean = int(np.clip(mean,0,255).astype(np.uint8))
                 variance = int(np.clip(variance,0,255).astype(np.uint8))
                 binary_block = (block >= mean).astype(np.uint8)
-                packed_binary_block = np.packbits(binary_block)
+                # packed_binary_block = np.packbits(binary_block)
+                bit_array_block = bitarray(binary_block.flatten().tolist())
+                print(binary_block)
+                print(bit_array_block)
                 encoded_data['mean'].append(mean)
                 encoded_data['variance'].append(variance)
-                encoded_data['quantized_data'].append(binary_block.tolist())            
+                encoded_data['quantized_data'].append(bit_array_block)            
     return encoded_data
 
 def reconstruct_BTC(encoded_data):
@@ -86,8 +90,10 @@ def reconstruct_BTC(encoded_data):
         
         for i in range(0, img_height, block_size):
             for j in range(0, img_width, block_size):
-                binary_block = np.array(quantized_data[block_id], dtype=np.uint8)
-                
+                bit_array_block = quantized_data[block_id]
+                binary_block = np.array(bit_array_block, dtype=np.uint8)
+                print(bit_array_block)
+                print("bin",binary_block)
                 q = np.sum(binary_block)
                 mean = means[block_id]
                 variance = variances[block_id]
@@ -118,7 +124,7 @@ def reconstruct_BTC(encoded_data):
 
 
 if __name__=="__main__":
-    img = load_image("D:/git/Block_Truncation_Coding/img_2.jpeg")
+    img = load_image("D:/git/Block_Truncation_Coding/lena.png")
     # display_image(img)
     if img is not None:
         print("Original Image Shape: ",img.shape)
