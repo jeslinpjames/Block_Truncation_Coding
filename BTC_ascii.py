@@ -34,15 +34,15 @@ def save_image(img,path):
  
 def save_encoded_data(encoded_data, path):
     if encoded_data:
-        with open(path, 'wb') as f:
+        with open(path, 'w') as f:
             pickle.dump(encoded_data, f)
-        print("Encoded data saved successfully as a .pkl file")
+        print("Encoded data saved successfully as a .txt file")
     else:
         print("Encoded data not found")
 
 def load_encoded_data(path):
     try:
-        with open(path, 'rb') as f:
+        with open(path, 'r') as f:
             encoded_data = pickle.load(f)
         return encoded_data
     except Exception as e:
@@ -64,17 +64,17 @@ def encode_BTC(img, block_size=4):
         for i in range(0, height, block_size):
             for j in range(0, width, block_size):
                 block = img[i:i+block_size, j:j+block_size]
-                mean = np.mean(block)
-                variance =np.std(block)
-                # mean_ascii = mean.to_bytes(1, byteorder='big')
-                # variance_ascii = variance.to_bytes(1, byteorder='big')
+                mean = int(np.clip(np.mean(block),0,255))
+                variance = int(np.clip(np.std(block),0,255))
+                mean_ascii = mean.to_bytes(1, byteorder='big')
+                variance_ascii = variance.to_bytes(1, byteorder='big')
                 mean = int(np.clip(mean,0,255).astype(np.uint8))
                 variance = int(np.clip(variance,0,255).astype(np.uint8))
                 binary_block = (block >= mean).astype(np.uint8)
                 # packed_binary_block = np.packbits(binary_block)
                 bit_array_block = bitarray(binary_block.flatten().tolist())
-                encoded_data['mean'].append(mean)
-                encoded_data['variance'].append(variance)
+                encoded_data['mean'].append(mean_ascii)
+                encoded_data['variance'].append(variance_ascii)
                 encoded_data['quantized_data'].append(bit_array_block)            
     return encoded_data
 
@@ -94,8 +94,8 @@ def reconstruct_BTC(encoded_data):
                 numpy_array = np.array(bit_array_block.tolist(), dtype=np.uint8)
                 binary_block = numpy_array.reshape((4, 4))
                 q = np.sum(binary_block)
-                mean = means[block_id]
-                variance = variances[block_id]
+                mean = int.from_bytes(means[block_id], byteorder='big')
+                variance = int.from_bytes(variances[block_id], byteorder='big')
                 m = block_size * block_size
                 q = np.sum(binary_block)
                 m = block_size * block_size
@@ -140,8 +140,8 @@ if __name__=="__main__":
         ], dtype=np.uint8)
         mat = np.random.randint(0, 256, size=(32, 32), dtype=np.uint8)
         encoded_data=encode_BTC(img,4)
-        save_encoded_data(encoded_data,"D:/git/Block_Truncation_Coding/compressed.btc")
-        encoded_data=load_encoded_data("D:/git/Block_Truncation_Coding/compressed.btc")
+        save_encoded_data(encoded_data,"D:/git/Block_Truncation_Coding/compressed.txt")
+        encoded_data=load_encoded_data("D:/git/Block_Truncation_Coding/compressed.txt")
         reconstructed_image=reconstruct_BTC(encoded_data)
         print(reconstructed_image)
         save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/compressed_img_2.jpeg")
