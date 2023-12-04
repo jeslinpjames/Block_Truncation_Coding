@@ -1,8 +1,7 @@
+from bitarray import bitarray
+import numpy as np
 import cv2
 import pickle
-from bitarray import bitarray
-import json
-import numpy as np
 
 def load_image(path):
     try:
@@ -17,118 +16,64 @@ def load_image(path):
         print(e)
         return None
     
-def display_image(img):
-    if img is not None:
-        cv2.imshow("image",img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-    else:
-        print("Image not found")
-
-def save_image(img,path):        
-    if img is not None:
-        cv2.imwrite(path,img)
-    else:
-        print("Image not found")
-
  
-def save_encoded_data(encoded_data, path):
+def save_encoded_data(encoded_data, mean_path,variance_path,blocks_path):
     if encoded_data:
-        with open(path, 'w') as f:
-            pickle.dump(encoded_data, f)
-        print("Encoded data saved successfully as a .txt file")
+        try:
+            with open(mean_path, 'wb') as f:
+                for mean in encoded_data['means']:
+                    f.write(mean)
+            with open(variance_path, 'wb') as f:
+                for variance in encoded_data['variances']:
+                    f.write(variance)
+            with open(blocks_path, 'wb') as f:
+                for block in encoded_data['quantized_data']:
+                    block.tofile(f)
+            print("Encoded data saved successfully")
+        except Exception as e:
+            print("Error in saving encoded data")
+            print(e)
+
+def to_char(value):
+    if 0 <= value <= 255:
+        return value.to_bytes(1, byteorder='big')
     else:
-        print("Encoded data not found")
-
-def load_encoded_data(path):
-    try:
-        with open(path, 'r') as f:
-            encoded_data = pickle.load(f)
-        return encoded_data
-    except Exception as e:
-        print("Error in loading encoded data")
-        print(e)
-        return None
-
+        raise ValueError("Value must be in the range 0-255")
 
 def encode_BTC(img, block_size=4):
     if img is not None:
         height, width = img.shape
-        encoded_data={
-            'block_size':block_size,
+        mean_bytes = b""
+        variance_bytes = b""
+        encoded_data = {
+            'block_size': block_size,
             'img_shape': img.shape,
-            'mean': [],
-            'variance':[],
+            'means': [],
+            'variances': [],
             'quantized_data': []
         }
+        num=0
         for i in range(0, height, block_size):
             for j in range(0, width, block_size):
                 block = img[i:i+block_size, j:j+block_size]
-                mean = int(np.clip(np.mean(block),0,255))
-                variance = int(np.clip(np.std(block),0,255))
-                mean_ascii = mean.to_bytes(1, byteorder='big')
-                variance_ascii = variance.to_bytes(1, byteorder='big')
-                mean = int(np.clip(mean,0,255).astype(np.uint8))
-                variance = int(np.clip(variance,0,255).astype(np.uint8))
+                mean = int(np.clip(np.mean(block), 0, 255))
+                variance = int(np.clip(np.std(block), 0, 255))
+                encoded_data['means'].append( to_char(mean))
+                encoded_data['variances'].append( to_char(variance))
                 binary_block = (block >= mean).astype(np.uint8)
-                # packed_binary_block = np.packbits(binary_block)
                 bit_array_block = bitarray(binary_block.flatten().tolist())
-                encoded_data['mean'].append(mean_ascii)
-                encoded_data['variance'].append(variance_ascii)
-                encoded_data['quantized_data'].append(bit_array_block)            
+                encoded_data['quantized_data'].append(bit_array_block)
+                num+=1
+        print("Number of blocks: ",num)
     return encoded_data
 
-def reconstruct_BTC(encoded_data):
-    if encoded_data:
-        block_size = encoded_data['block_size']
-        img_height, img_width = encoded_data['img_shape']
-        means = encoded_data['mean']
-        variances = encoded_data['variance']
-        quantized_data = encoded_data['quantized_data']
-        reconstructed_image = np.zeros((img_height, img_width), dtype=np.uint8)
-        block_id = 0
-        
-        for i in range(0, img_height, block_size):
-            for j in range(0, img_width, block_size):
-                bit_array_block = quantized_data[block_id]
-                numpy_array = np.array(bit_array_block.tolist(), dtype=np.uint8)
-                binary_block = numpy_array.reshape((4, 4))
-                q = np.sum(binary_block)
-                mean = int.from_bytes(means[block_id], byteorder='big')
-                variance = int.from_bytes(variances[block_id], byteorder='big')
-                m = block_size * block_size
-                q = np.sum(binary_block)
-                m = block_size * block_size
-                if q != 0 and q != block_size**2:
-                    # Compute 'a' and 'b'
-                    a = int(mean - variance * np.sqrt(q / (m - q)))
-                    b = int(mean + variance * np.sqrt(m - q) / q)
-                else:
-                    # Compute 'a' and 'b'
-                    a = int(mean - variance)
-                    b = int(mean + variance)
-                # Use 'a' and 'b' to reconstruct the block
-                binary_block = binary_block.reshape((block_size, block_size))
-                reconstructed_block = np.zeros((block_size, block_size), dtype=np.uint8)
-                for k in range(block_size):
-                    for l in range(block_size):
-                        if binary_block[k, l] == 1:  
-                            reconstructed_block[k, l] = b
-                        else:
-                            reconstructed_block[k, l] = a
-                reconstructed_image[i:i + block_size, j:j + block_size] = reconstructed_block
-                block_id += 1
-                    
-
-        return reconstructed_image
 
 
 if __name__=="__main__":
     img = load_image("D:/git/Block_Truncation_Coding/lena.png")
-    # display_image(img)
     if img is not None:
         print("Original Image Shape: ",img.shape)
-        matrix = np.array([
+        mat = np.array([
         [135, 42, 201, 173, 94, 117, 55, 208],
         [30, 183, 70, 150, 42, 88, 123, 77],
         [101, 162, 44, 95, 200, 35, 217, 124],
@@ -138,11 +83,9 @@ if __name__=="__main__":
         [193, 11, 75, 63, 234, 150, 194, 87],
         [94, 201, 245, 168, 5, 113, 45, 142]
         ], dtype=np.uint8)
-        mat = np.random.randint(0, 256, size=(32, 32), dtype=np.uint8)
-        encoded_data=encode_BTC(img,4)
-        save_encoded_data(encoded_data,"D:/git/Block_Truncation_Coding/compressed.txt")
-        encoded_data=load_encoded_data("D:/git/Block_Truncation_Coding/compressed.txt")
-        reconstructed_image=reconstruct_BTC(encoded_data)
-        print(reconstructed_image)
-        save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/compressed_img_2.jpeg")
-
+        # img = np.random.randint(0, 256, size=(32, 32), dtype=np.uint8)
+        mean_output_path="D:/git/Block_Truncation_Coding/mean.txt"
+        variance_output_path="D:/git/Block_Truncation_Coding/variance.txt"
+        blocks_output_path="D:/git/Block_Truncation_Coding/blocks.txt"
+        encoded_data= encode_BTC(img,block_size=4)
+        save_encoded_data(encoded_data,mean_output_path,variance_output_path,blocks_output_path)
