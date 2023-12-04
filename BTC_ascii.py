@@ -34,6 +34,38 @@ def save_encoded_data(encoded_data, mean_path,variance_path,blocks_path):
             print("Error in saving encoded data")
             print(e)
 
+def load_encoded_data(mean_path, variance_path, blocks_path, block_size=4):
+    try:
+        encoded_data = {
+            'means': [],
+            'variances': [],
+            'quantized_data': []
+        }
+        with open(mean_path, 'rb') as f:
+            encoded_data['means'] = list(f.read())
+        with open(variance_path, 'rb') as f:
+            encoded_data['variances'] = list(f.read())
+        with open(blocks_path, 'rb') as f:
+            # Read bytes from the file
+            size = block_size * block_size
+            size = size // 8 
+            byte_block = f.read(size)     
+            while byte_block:
+                # Convert bytes to bitarray
+                bit_array_block = bitarray()
+                bit_array_block.frombytes(byte_block) 
+                # Append the bitarray block to the list
+                encoded_data['quantized_data'].append(bit_array_block)
+                # Read the next block
+                byte_block = f.read(size)
+        print("Encoded data loaded successfully")
+        return encoded_data
+
+    except Exception as e:
+        print("Error in loading encoded data")
+        print(e)
+        return None
+    
 def to_char(value):
     if 0 <= value <= 255:
         return value.to_bytes(1, byteorder='big')
@@ -89,3 +121,4 @@ if __name__=="__main__":
         blocks_output_path="D:/git/Block_Truncation_Coding/blocks.txt"
         encoded_data= encode_BTC(img,block_size=4)
         save_encoded_data(encoded_data,mean_output_path,variance_output_path,blocks_output_path)
+        encoded_data=load_encoded_data(mean_output_path,variance_output_path,blocks_output_path,block_size=4)
