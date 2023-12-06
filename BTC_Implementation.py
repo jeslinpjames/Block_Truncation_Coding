@@ -1,7 +1,5 @@
 import cv2
-import pickle
 from bitarray import bitarray
-import json
 import numpy as np
 
 def load_image(path):
@@ -160,7 +158,7 @@ def reconstruct_BTC(encoded_data):
 
 
 if __name__=="__main__":
-    img = load_image("D:/git/Block_Truncation_Coding/lena.png")
+    img = load_image("D:/git/Block_Truncation_Coding/images/synthetic.png")
     if img is not None:
         print("Original Image Shape: ",img.shape)
         mat = np.array([
@@ -174,14 +172,14 @@ if __name__=="__main__":
         [94, 201, 245, 168, 5, 113, 45, 142]
         ], dtype=np.uint8)
         # img = np.random.randint(0, 256, size=(32, 32), dtype=np.uint8)
-        mean_output_path="D:/git/Block_Truncation_Coding/mean.txt"
-        variance_output_path="D:/git/Block_Truncation_Coding/variance.txt"
-        blocks_output_path="D:/git/Block_Truncation_Coding/blocks.txt"
+        mean_output_path="D:/git/Block_Truncation_Coding/compressed/mean.txt"
+        variance_output_path="D:/git/Block_Truncation_Coding/compressed/variance.txt"
+        blocks_output_path="D:/git/Block_Truncation_Coding/compressed/blocks.txt"
         encoded_data= encode_BTC(img,block_size=4)
         save_encoded_data(encoded_data,mean_output_path,variance_output_path,blocks_output_path)
         encoded_data=load_encoded_data(mean_output_path,variance_output_path,blocks_output_path,block_size=4)
         encoded_data['img_shape']=img.shape
         reconstructed_image=reconstruct_BTC(encoded_data)
-        save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/compressed_img.jpeg")
+        save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/images/compressed_img.jpeg")
 
     

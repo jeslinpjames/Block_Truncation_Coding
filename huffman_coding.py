@@ -86,16 +86,16 @@ def decode_huffman(encoded_data, root):
     return bytes(decoded_data)
 
 # Example usage:
-mean_path = "D:/git/Block_Truncation_Coding/mean.txt"
-variance_path = "D:/git/Block_Truncation_Coding/variance.txt"
-blocks_path = "D:/git/Block_Truncation_Coding/blocks.txt"
+mean_path = "D:/git/Block_Truncation_Coding/compressed/mean.txt"
+variance_path = "D:/git/Block_Truncation_Coding/compressed/variance.txt"
+blocks_path = "D:/git/Block_Truncation_Coding/compressed/blocks.txt"
 
 # Encoding
-root_mean = huffman_encode(mean_path, "D:/git/Block_Truncation_Coding/mean_encoded.txt")
-root_variance = huffman_encode(variance_path, "D:/git/Block_Truncation_Coding/variance_encoded.txt")
-root_blocks = huffman_encode(blocks_path, "D:/git/Block_Truncation_Coding/blocks_encoded.txt")
+root_mean = huffman_encode(mean_path, "D:/git/Block_Truncation_Coding/compressed/mean_encoded.txt")
+root_variance = huffman_encode(variance_path, "D:/git/Block_Truncation_Coding/compressed/variance_encoded.txt")
+root_blocks = huffman_encode(blocks_path, "D:/git/Block_Truncation_Coding/compressed/blocks_encoded.txt")
 
 # Decoding
-huffman_decode("D:/git/Block_Truncation_Coding/mean_encoded.txt", "D:/git/Block_Truncation_Coding/mean_decoded.txt", root_mean)
-huffman_decode("D:/git/Block_Truncation_Coding/variance_encoded.txt", "D:/git/Block_Truncation_Coding/variance_decoded.txt", root_variance)
-huffman_decode("D:/git/Block_Truncation_Coding/blocks_encoded.txt", "D:/git/Block_Truncation_Coding/blocks_decoded.txt", root_blocks)
+huffman_decode("D:/git/Block_Truncation_Coding/compressed/mean_encoded.txt", "D:/git/Block_Truncation_Coding/compressed/mean_decoded.txt", root_mean)
+huffman_decode("D:/git/Block_Truncation_Coding/compressed/variance_encoded.txt", "D:/git/Block_Truncation_Coding/compressed/variance_decoded.txt", root_variance)
+huffman_decode("D:/git/Block_Truncation_Coding/compressed/blocks_encoded.txt", "D:/git/Block_Truncation_Coding/compressed/blocks_decoded.txt", root_blocks)
