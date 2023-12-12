@@ -29,7 +29,7 @@ def save_image(img,path):
     else:
         print("Image not found")
 
-def abs_moment(matrix, mean, m):
+def find_abs_moment(matrix, mean, m):
     return np.sum(np.abs(matrix - mean)) / m
 
 def to_char(value):
@@ -52,8 +52,11 @@ def encode_AMBTC(img, block_size=4):
         for i in range(0, height, block_size):
             for j in range(0, width, block_size):
                 block = img[i:i+block_size, j:j+block_size]
-                mean = int(np.clip(np.mean(block), 0, 255))
-                abs_moment = abs_moment(block,mean,block_size*block_size)
+                m = block_size * block_size
+                mean = np.mean(block)
+                abs_moment = find_abs_moment(block,mean,m)
+                abs_moment = int(np.clip(abs_moment, 0, 255))
+                mean = int(np.clip(mean, 0, 255))
                 encoded_data['means'].append( to_char(mean))
                 encoded_data['abs_moment'].append( to_char(abs_moment))
                 binary_block = (block >= mean).astype(np.uint8)
@@ -62,6 +65,49 @@ def encode_AMBTC(img, block_size=4):
                 num+=1
         print("Number of blocks: ",num)
     return encoded_data
+
+def reconstruct_BTC(encoded_data):
+    if encoded_data:
+        block_size = encoded_data['block_size']
+        img_height, img_width = encoded_data['img_shape']
+        means = [int.from_bytes(mean, byteorder='big') for mean in encoded_data['means']]
+        abs_moments = [int.from_bytes(abs_moment, byteorder='big') for abs_moment in encoded_data['abs_moment']]
+        quantized_data = encoded_data['quantized_data']
+        reconstructed_image = np.zeros((img_height, img_width), dtype=np.uint8)
+        block_id = 0
+            
+        for i in range(0, img_height, block_size):
+            for j in range(0, img_width, block_size):
+                bit_array_block = quantized_data[block_id]
+                numpy_array = np.array(bit_array_block.tolist(), dtype=np.uint8)
+                binary_block = numpy_array.reshape((4, 4))
+                q = np.sum(binary_block)
+                mean = means[block_id]
+                abs_moment = abs_moments[block_id]
+                m = block_size * block_size
+                q = np.sum(binary_block)
+                m = block_size * block_size
+                gamma = m * abs_moment / 2
+                if q != 0 and q != block_size**2:
+                    # Compute 'a' and 'b'
+                    b = mean + (gamma / q)
+                    a = mean - (gamma / (m - q))
+                else:
+                    # Compute 'a' and 'b'
+                    a = int(mean - gamma)
+                    b = int(mean + gamma)
+                # Use 'a' and 'b' to reconstruct the block
+                binary_block = binary_block.reshape((block_size, block_size))
+                reconstructed_block = np.zeros((block_size, block_size), dtype=np.uint8)
+                for k in range(block_size):
+                    for l in range(block_size):
+                        if binary_block[k, l] == 1:  
+                            reconstructed_block[k, l] = b
+                        else:
+                            reconstructed_block[k, l] = a
+                reconstructed_image[i:i + block_size, j:j + block_size] = reconstructed_block
+                block_id += 1
+    return reconstructed_image
 
 if __name__ =="__main__":
     mat = np.array([
@@ -72,6 +118,10 @@ if __name__ =="__main__":
     ], dtype=np.uint8)
     mean = int(np.clip(np.mean(mat), 0, 255))
     mean = np.mean(mat)
-    abs_moment = abs_moment(mat,mean,4*4)
-    print("Mean: ",mean)
-    print("Abs moment: ",abs_moment)
+    abs_moment = find_abs_moment(mat,mean,4*4)
+    gamma = 16*abs_moment/2
+    
+    encoded =encode_AMBTC(mat)
+    img = reconstruct_BTC(encoded)
+    print(img)
+
