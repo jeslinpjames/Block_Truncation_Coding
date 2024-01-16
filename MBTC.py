@@ -32,12 +32,13 @@ def save_image(img,path):
 
 def find_abs_moment(matrix, mean, m):
     return np.sum(np.abs(matrix - mean)) / m
+
 def to_char(value):
     if 0 <= value <= 255:
         return value.to_bytes(1, byteorder='big')
     else:
         raise ValueError("Value must be in the range 0-255")
-
+    
 def save_encoded_data(encoded_data, mean_path,abs_moment_path,blocks_path):
     if encoded_data:
         try:
@@ -104,23 +105,29 @@ def encode_MBTC(img, block_size=4):
             for j in range(0, width, block_size):
                 block = img[i:i+block_size, j:j+block_size]
                 m = block_size * block_size
-                mean = np.mean(block)
+                mean = int(np.clip(np.mean(block), 0, 255))
                 T = 0
                 if mean == 0:
                     uh = 255
+                    T = 0
                     ul = 0
                 else:
                     max_val = np.max(block)
                     min_val = np.min(block)
-                    T = (max_val + min_val + mean) / 3
-                    uh = np.mean(block[block > T])
-                    ul = np.mean(block[block < T])
-                    uh = np.clip(int(np.round(uh)), 0, 255)
-                    ul = np.clip(int(np.round(ul)), 0, 255)
-                mean = int(np.clip(mean, 0, 255))
-                encoded_data['means'].append( to_char(mean))
-                encoded_data['U_high'].append( to_char(uh))
-                encoded_data['U_low'].append( to_char(ul))
+                    result = (min_val.astype(np.uint16) + max_val.astype(np.uint16) + mean) / 3
+                    T = result.astype(np.uint8)
+                    uh = int(np.clip(np.mean(block[block > T]), 0, 255))
+                    ul = int(np.clip(np.mean(block[block < T]), 0, 255))
+                    print("mean: ",mean)
+                    print("max: ",max_val)
+                    print("min: ",min_val)
+                    print("T: ",T)
+                    print("uh: ",uh)
+                    print("ul: ",ul)
+                print("mean: ",mean)
+                encoded_data['means'].append(to_char(mean))
+                encoded_data['U_high'].append(to_char(uh))
+                encoded_data['U_low'].append(to_char(ul))
                 binary_block = (block >= T).astype(np.uint8)
                 bit_array_block = bitarray(binary_block.flatten().tolist())
                 encoded_data['quantized_data'].append(bit_array_block)
@@ -169,16 +176,17 @@ if __name__ =="__main__":
     img = load_image("D:/git/Block_Truncation_Coding/images/synthetic.png")
     if img is not None:
         print("Original Image Shape: ",img.shape)
-        mat = np.array([
-            [121,114,56,47],
-            [37,200,247,255],
-            [16,0,12,169],
-            [43,5,7,251]
+        img= np.array([
+            [161,160,163,155],
+            [161,160,163,155],
+            [160,159,154,154],
+            [161,158,153,151]
         ], dtype=np.uint8)
         # mean = int(np.clip(np.mean(mat), 0, 255))
         # mean = np.mean(mat)
         # abs_moment = find_abs_moment(mat,mean,4*4)
         # gamma = 16*abs_moment/2
+        
         mean_output_path="D:/git/Block_Truncation_Coding/compressed/mean.txt"
         variance_output_path="D:/git/Block_Truncation_Coding/compressed/abs_moment.txt"
         blocks_output_path="D:/git/Block_Truncation_Coding/compressed/blocks.txt"
