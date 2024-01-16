@@ -32,7 +32,6 @@ def save_image(img,path):
 
 def find_abs_moment(matrix, mean, m):
     return np.sum(np.abs(matrix - mean)) / m
-
 def to_char(value):
     if 0 <= value <= 255:
         return value.to_bytes(1, byteorder='big')
@@ -89,14 +88,15 @@ def load_encoded_data(mean_path, abs_moment_path, blocks_path, block_size=4):
         print(e)
         return None
 
-def encode_AMBTC(img, block_size=4):
+def encode_MBTC(img, block_size=4):
     if img is not None:
         height, width = img.shape
         encoded_data = {
             'block_size': block_size,
             'img_shape': img.shape,
             'means': [],
-            'abs_moment': [],
+            'U_high': [],
+            'U_low': [],
             'quantized_data': []
         }
         num=0
@@ -105,12 +105,23 @@ def encode_AMBTC(img, block_size=4):
                 block = img[i:i+block_size, j:j+block_size]
                 m = block_size * block_size
                 mean = np.mean(block)
-                abs_moment = find_abs_moment(block,mean,m)
-                abs_moment = int(np.clip(abs_moment, 0, 255))
+                T = 0
+                if mean == 0:
+                    uh = 255
+                    ul = 0
+                else:
+                    max_val = np.max(block)
+                    min_val = np.min(block)
+                    T = (max_val + min_val + mean) / 3
+                    uh = np.mean(block[block > T])
+                    ul = np.mean(block[block < T])
+                    uh = np.clip(int(np.round(uh)), 0, 255)
+                    ul = np.clip(int(np.round(ul)), 0, 255)
                 mean = int(np.clip(mean, 0, 255))
                 encoded_data['means'].append( to_char(mean))
-                encoded_data['abs_moment'].append( to_char(abs_moment))
-                binary_block = (block >= mean).astype(np.uint8)
+                encoded_data['U_high'].append( to_char(uh))
+                encoded_data['U_low'].append( to_char(ul))
+                binary_block = (block >= T).astype(np.uint8)
                 bit_array_block = bitarray(binary_block.flatten().tolist())
                 encoded_data['quantized_data'].append(bit_array_block)
                 num+=1
@@ -118,12 +129,13 @@ def encode_AMBTC(img, block_size=4):
     return encoded_data
 
 
-def reconstruct_AMBTC(encoded_data):
+def reconstruct_MBTC(encoded_data):
     if encoded_data:
         block_size = encoded_data['block_size']
         img_height, img_width = encoded_data['img_shape']
         means = encoded_data['means']
-        abs_moments = encoded_data['abs_moment']
+        uhs = encoded_data['U_high']
+        uls = encoded_data['U_low']
         quantized_data = encoded_data['quantized_data']
         reconstructed_image = np.zeros((img_height, img_width), dtype=np.uint8)
         block_id = 0
@@ -135,30 +147,19 @@ def reconstruct_AMBTC(encoded_data):
                 binary_block = numpy_array.reshape((block_size, block_size))
                 q = np.sum(binary_block)
                 mean = means[block_id]
-                abs_moment = abs_moments[block_id]        
+                ul = uls[block_id]   
+                uh = uhs[block_id]        
                 m = block_size * block_size
                 q = np.sum(binary_block)
                 m = block_size * block_size
-                gamma = m * abs_moment / 2
-
-                if q != 0 and q != block_size**2:
-                    # Compute 'a' and 'b'
-                    b = mean + (gamma / q)
-                    a = mean - (gamma / (m - q))
-                else:
-                    # Compute 'a' and 'b'
-                    a = int(mean - gamma)
-                    b = int(mean + gamma)
-
-                # Use 'a' and 'b' to reconstruct the block
                 binary_block = binary_block.reshape((block_size, block_size))
                 reconstructed_block = np.zeros((block_size, block_size), dtype=np.uint8)
                 for k in range(block_size):
                     for l in range(block_size):
                         if binary_block[k, l] == 1:
-                            reconstructed_block[k, l] = b
+                            reconstructed_block[k, l] = uh
                         else:
-                            reconstructed_block[k, l] = a
+                            reconstructed_block[k, l] = ul
                 reconstructed_image[i:i + block_size, j:j + block_size] = reconstructed_block
                 block_id += 1
     return reconstructed_image
@@ -181,11 +182,11 @@ if __name__ =="__main__":
         mean_output_path="D:/git/Block_Truncation_Coding/compressed/mean.txt"
         variance_output_path="D:/git/Block_Truncation_Coding/compressed/abs_moment.txt"
         blocks_output_path="D:/git/Block_Truncation_Coding/compressed/blocks.txt"
-        encoded_data= encode_AMBTC(img,block_size=4)
+        encoded_data= encode_MBTC(img,block_size=4)
         save_encoded_data(encoded_data,mean_output_path,variance_output_path,blocks_output_path)
         encoded_data=load_encoded_data(mean_output_path,variance_output_path,blocks_output_path,block_size=4)
         encoded_data['img_shape']=img.shape
-        reconstructed_image=reconstruct_AMBTC(encoded_data)
+        reconstructed_image=reconstruct_MBTC(encoded_data)
         save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/images/compressedAMBTC_img.png")
         output_path = "D:/git/Block_Truncation_Coding/images/lena2.png"
         path2="D:/git/Block_Truncation_Coding/images/compressedAMBTC_img.png"

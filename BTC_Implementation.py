@@ -180,6 +180,6 @@ if __name__=="__main__":
         encoded_data=load_encoded_data(mean_output_path,variance_output_path,blocks_output_path,block_size=4)
         encoded_data['img_shape']=img.shape
         reconstructed_image=reconstruct_BTC(encoded_data)
-        save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/images/compressed_img.jpeg")
+        save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/images/compressed_img.png")
 
     
