@@ -42,7 +42,7 @@ def save_encoded_data(encoded_data, uh_path,ul_path,blocks_path):
             with open(uh_path, 'wb') as f:
                 for uh in encoded_data['U_high']:
                     f.write(uh)
-            with open(uh_path, 'wb') as f:
+            with open(ul_path, 'wb') as f:
                 for ul in encoded_data['U_low']:
                     f.write(ul)
             with open(blocks_path, 'wb') as f:
@@ -53,7 +53,7 @@ def save_encoded_data(encoded_data, uh_path,ul_path,blocks_path):
             print("Error in saving encoded data")
             print(e)
 
-def load_encoded_data(uh_path, ul_path, blocks_path, block_size=4):
+def load_encoded_data(uh_path, ul_path, blocks_path, block_size=4 ):
     try:
         encoded_data = {
             'block_size': block_size,
@@ -100,11 +100,10 @@ def encode_MBTC(img, block_size=4):
         for i in range(0, height, block_size):
             for j in range(0, width, block_size):
                 block = img[i:i+block_size, j:j+block_size]
-                m = block_size * block_size
                 mean = int(np.clip(np.mean(block), 0, 255))
                 T = 0
                 if mean == 0:
-                    uh = 255
+                    uh = 0
                     T = 0
                     ul = 0
                 else:
@@ -112,14 +111,18 @@ def encode_MBTC(img, block_size=4):
                     min_val = np.min(block)
                     result = (min_val.astype(np.uint16) + max_val.astype(np.uint16) + mean) / 3
                     T = result.astype(np.uint8)
-                    if np.any(block > T):
-                        uh = int(np.clip(np.mean(block[block > T]), 0, 255))
+                    if(min_val==max_val): 
+                        uh = int(min_val)
+                        ul = int(min_val)
                     else:
-                        uh = 255  
-                    if np.any(block < T):
-                        ul = int(np.clip(np.mean(block[block < T]), 0, 255))
-                    else:
-                        ul = 0  
+                        if np.any(block > T):
+                            uh = int(np.clip(np.mean(block[block > T]), 0, 255))
+                        else:
+                            uh = 255  
+                        if np.any(block < T):
+                            ul = int(np.clip(np.mean(block[block < T]), 0, 255))
+                        else:
+                            ul = 0  
                 encoded_data['U_high'].append(to_char(uh))
                 encoded_data['U_low'].append(to_char(ul))
                 binary_block = (block >= T).astype(np.uint8)
@@ -134,8 +137,8 @@ def reconstruct_MBTC(encoded_data):
     if encoded_data:
         block_size = encoded_data['block_size']
         img_height, img_width = encoded_data['img_shape']
-        uhs = [int.from_bytes(uh, byteorder='big') for uh in encoded_data['U_high']]
-        uls = [int.from_bytes(ul, byteorder='big') for ul in encoded_data['U_low']]
+        uls = encoded_data['U_low']
+        uhs = encoded_data['U_high']
         quantized_data = encoded_data['quantized_data']
         reconstructed_image = np.zeros((img_height, img_width), dtype=np.uint8)
         block_id = 0
@@ -160,7 +163,7 @@ def reconstruct_MBTC(encoded_data):
 
 
 if __name__ =="__main__":
-    img = load_image("D:/git/Block_Truncation_Coding/images/lena2.png")
+    img = load_image("D:/git/Block_Truncation_Coding/images/synthetic.png")
     if img is not None:
         print("Original Image Shape: ",img.shape)
         mat= np.array([
@@ -178,7 +181,7 @@ if __name__ =="__main__":
         encoded_data['img_shape']=img.shape
         reconstructed_image=reconstruct_MBTC(encoded_data)
         save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/images/compressedMBTC_img.png")
-        output_path = "D:/git/Block_Truncation_Coding/images/lena2.png"
-        path2="D:/git/Block_Truncation_Coding/images/compressedAMBTC_img.png"
+        output_path = "D:/git/Block_Truncation_Coding/images/synthetic.png"
+        path2="D:/git/Block_Truncation_Coding/images/compressedMBTC_img.png"
         # psnr_value , ps2= calculate_psnr(output_path, path2)
         # print(f"PSNR for original image and compressed image:  {ps2}")
