@@ -95,7 +95,6 @@ def encode_MBTC(img, block_size=4):
         encoded_data = {
             'block_size': block_size,
             'img_shape': img.shape,
-            'means': [],
             'U_high': [],
             'U_low': [],
             'quantized_data': []
@@ -104,6 +103,7 @@ def encode_MBTC(img, block_size=4):
         for i in range(0, height, block_size):
             for j in range(0, width, block_size):
                 block = img[i:i+block_size, j:j+block_size]
+                # print("block: ",block)
                 m = block_size * block_size
                 mean = int(np.clip(np.mean(block), 0, 255))
                 T = 0
@@ -116,16 +116,23 @@ def encode_MBTC(img, block_size=4):
                     min_val = np.min(block)
                     result = (min_val.astype(np.uint16) + max_val.astype(np.uint16) + mean) / 3
                     T = result.astype(np.uint8)
-                    uh = int(np.clip(np.mean(block[block > T]), 0, 255))
-                    ul = int(np.clip(np.mean(block[block < T]), 0, 255))
-                    print("mean: ",mean)
-                    print("max: ",max_val)
-                    print("min: ",min_val)
-                    print("T: ",T)
-                    print("uh: ",uh)
-                    print("ul: ",ul)
-                print("mean: ",mean)
-                encoded_data['means'].append(to_char(mean))
+                    # print("mean: ",mean)
+                    # print("max: ",max_val)
+                    # print("min: ",min_val)
+                    # print("T: ",T)
+                    if np.any(block > T):
+                        uh = int(np.clip(np.mean(block[block > T]), 0, 255))
+                    else:
+                        uh = 255  # Set a default value if no values are greater than T
+
+                    # Check if there are any values less than T
+                    if np.any(block < T):
+                        ul = int(np.clip(np.mean(block[block < T]), 0, 255))
+                    else:
+                        ul = 0  # Set a default value if no values are less than T
+                    # print("uh: ",uh)
+                    # print("ul: ",ul)
+                # print("mean: ",mean)
                 encoded_data['U_high'].append(to_char(uh))
                 encoded_data['U_low'].append(to_char(ul))
                 binary_block = (block >= T).astype(np.uint8)
@@ -140,9 +147,8 @@ def reconstruct_MBTC(encoded_data):
     if encoded_data:
         block_size = encoded_data['block_size']
         img_height, img_width = encoded_data['img_shape']
-        means = encoded_data['means']
-        uhs = encoded_data['U_high']
-        uls = encoded_data['U_low']
+        uhs = [int.from_bytes(uh, byteorder='big') for uh in encoded_data['U_high']]
+        uls = [int.from_bytes(ul, byteorder='big') for ul in encoded_data['U_low']]
         quantized_data = encoded_data['quantized_data']
         reconstructed_image = np.zeros((img_height, img_width), dtype=np.uint8)
         block_id = 0
@@ -152,13 +158,10 @@ def reconstruct_MBTC(encoded_data):
                 bit_array_block = quantized_data[block_id]
                 numpy_array = np.array(bit_array_block.tolist(), dtype=np.uint8)
                 binary_block = numpy_array.reshape((block_size, block_size))
-                q = np.sum(binary_block)
-                mean = means[block_id]
-                ul = uls[block_id]   
-                uh = uhs[block_id]        
-                m = block_size * block_size
-                q = np.sum(binary_block)
-                m = block_size * block_size
+                ul = int(uls[block_id])
+                uh = int(uhs[block_id])
+                # print("ul ",ul)
+                # print("uh",uh)
                 binary_block = binary_block.reshape((block_size, block_size))
                 reconstructed_block = np.zeros((block_size, block_size), dtype=np.uint8)
                 for k in range(block_size):
@@ -173,10 +176,10 @@ def reconstruct_MBTC(encoded_data):
 
 
 if __name__ =="__main__":
-    img = load_image("D:/git/Block_Truncation_Coding/images/synthetic.png")
+    img = load_image("D:/git/Block_Truncation_Coding/images/lena2.png")
     if img is not None:
         print("Original Image Shape: ",img.shape)
-        img= np.array([
+        mat= np.array([
             [161,160,163,155],
             [161,160,163,155],
             [160,159,154,154],
@@ -191,12 +194,12 @@ if __name__ =="__main__":
         variance_output_path="D:/git/Block_Truncation_Coding/compressed/abs_moment.txt"
         blocks_output_path="D:/git/Block_Truncation_Coding/compressed/blocks.txt"
         encoded_data= encode_MBTC(img,block_size=4)
-        save_encoded_data(encoded_data,mean_output_path,variance_output_path,blocks_output_path)
-        encoded_data=load_encoded_data(mean_output_path,variance_output_path,blocks_output_path,block_size=4)
-        encoded_data['img_shape']=img.shape
+        # save_encoded_data(encoded_data,mean_output_path,variance_output_path,blocks_output_path)
+        # encoded_data=load_encoded_data(mean_output_path,variance_output_path,blocks_output_path,block_size=4)
+        # encoded_data['img_shape']=img.shape
         reconstructed_image=reconstruct_MBTC(encoded_data)
-        save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/images/compressedAMBTC_img.png")
+        save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/images/compressedMBTC_img.png")
         output_path = "D:/git/Block_Truncation_Coding/images/lena2.png"
         path2="D:/git/Block_Truncation_Coding/images/compressedAMBTC_img.png"
-        psnr_value , ps2= calculate_psnr(output_path, path2)
-        print(f"PSNR for original image and compressed image:  {ps2}")
+        # psnr_value , ps2= calculate_psnr(output_path, path2)
+        # print(f"PSNR for original image and compressed image:  {ps2}")
