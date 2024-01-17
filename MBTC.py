@@ -30,24 +30,21 @@ def save_image(img,path):
     else:
         print("Image not found")
 
-def find_abs_moment(matrix, mean, m):
-    return np.sum(np.abs(matrix - mean)) / m
-
 def to_char(value):
     if 0 <= value <= 255:
         return value.to_bytes(1, byteorder='big')
     else:
         raise ValueError("Value must be in the range 0-255")
     
-def save_encoded_data(encoded_data, mean_path,abs_moment_path,blocks_path):
+def save_encoded_data(encoded_data, uh_path,ul_path,blocks_path):
     if encoded_data:
         try:
-            with open(mean_path, 'wb') as f:
-                for mean in encoded_data['means']:
-                    f.write(mean)
-            with open(abs_moment_path, 'wb') as f:
-                for abs_moment in encoded_data['abs_moment']:
-                    f.write(abs_moment)
+            with open(uh_path, 'wb') as f:
+                for uh in encoded_data['U_high']:
+                    f.write(uh)
+            with open(uh_path, 'wb') as f:
+                for ul in encoded_data['U_low']:
+                    f.write(ul)
             with open(blocks_path, 'wb') as f:
                 for block in encoded_data['quantized_data']:
                     block.tofile(f)
@@ -56,19 +53,19 @@ def save_encoded_data(encoded_data, mean_path,abs_moment_path,blocks_path):
             print("Error in saving encoded data")
             print(e)
 
-def load_encoded_data(mean_path, abs_moment_path, blocks_path, block_size=4):
+def load_encoded_data(uh_path, ul_path, blocks_path, block_size=4):
     try:
         encoded_data = {
             'block_size': block_size,
             'img_shape': None,
-            'means': [],
-            'abs_moment': [],
+            'U_high': [],
+            'U_low': [],
             'quantized_data': []
         }
-        with open(mean_path, 'rb') as f:
-            encoded_data['means'] = list(f.read())
-        with open(abs_moment_path, 'rb') as f:
-            encoded_data['abs_moment'] = list(f.read())
+        with open(uh_path, 'rb') as f:
+            encoded_data['U_high'] = list(f.read())
+        with open(ul_path, 'rb') as f:
+            encoded_data['U_low'] = list(f.read())
         with open(blocks_path, 'rb') as f:
             # Read bytes from the file
             size = block_size * block_size
@@ -172,13 +169,13 @@ if __name__ =="__main__":
             [160,159,154,154],
             [161,158,153,151]
         ], dtype=np.uint8)    
-        mean_output_path="D:/git/Block_Truncation_Coding/compressed/mean.txt"
-        variance_output_path="D:/git/Block_Truncation_Coding/compressed/abs_moment.txt"
+        uh_output_path="D:/git/Block_Truncation_Coding/compressed/uhs.txt"
+        ul_output_path="D:/git/Block_Truncation_Coding/compressed/uls.txt"
         blocks_output_path="D:/git/Block_Truncation_Coding/compressed/blocks.txt"
         encoded_data= encode_MBTC(img,block_size=4)
-        # save_encoded_data(encoded_data,mean_output_path,variance_output_path,blocks_output_path)
-        # encoded_data=load_encoded_data(mean_output_path,variance_output_path,blocks_output_path,block_size=4)
-        # encoded_data['img_shape']=img.shape
+        save_encoded_data(encoded_data,uh_output_path,ul_output_path,blocks_output_path)
+        encoded_data=load_encoded_data(uh_output_path,ul_output_path,blocks_output_path,block_size=4)
+        encoded_data['img_shape']=img.shape
         reconstructed_image=reconstruct_MBTC(encoded_data)
         save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/images/compressedMBTC_img.png")
         output_path = "D:/git/Block_Truncation_Coding/images/lena2.png"
