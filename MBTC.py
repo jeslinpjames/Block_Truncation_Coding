@@ -103,7 +103,6 @@ def encode_MBTC(img, block_size=4):
         for i in range(0, height, block_size):
             for j in range(0, width, block_size):
                 block = img[i:i+block_size, j:j+block_size]
-                # print("block: ",block)
                 m = block_size * block_size
                 mean = int(np.clip(np.mean(block), 0, 255))
                 T = 0
@@ -116,23 +115,14 @@ def encode_MBTC(img, block_size=4):
                     min_val = np.min(block)
                     result = (min_val.astype(np.uint16) + max_val.astype(np.uint16) + mean) / 3
                     T = result.astype(np.uint8)
-                    # print("mean: ",mean)
-                    # print("max: ",max_val)
-                    # print("min: ",min_val)
-                    # print("T: ",T)
                     if np.any(block > T):
                         uh = int(np.clip(np.mean(block[block > T]), 0, 255))
                     else:
-                        uh = 255  # Set a default value if no values are greater than T
-
-                    # Check if there are any values less than T
+                        uh = 255  
                     if np.any(block < T):
                         ul = int(np.clip(np.mean(block[block < T]), 0, 255))
                     else:
-                        ul = 0  # Set a default value if no values are less than T
-                    # print("uh: ",uh)
-                    # print("ul: ",ul)
-                # print("mean: ",mean)
+                        ul = 0  
                 encoded_data['U_high'].append(to_char(uh))
                 encoded_data['U_low'].append(to_char(ul))
                 binary_block = (block >= T).astype(np.uint8)
@@ -152,7 +142,6 @@ def reconstruct_MBTC(encoded_data):
         quantized_data = encoded_data['quantized_data']
         reconstructed_image = np.zeros((img_height, img_width), dtype=np.uint8)
         block_id = 0
-
         for i in range(0, img_height, block_size):
             for j in range(0, img_width, block_size):
                 bit_array_block = quantized_data[block_id]
@@ -160,8 +149,6 @@ def reconstruct_MBTC(encoded_data):
                 binary_block = numpy_array.reshape((block_size, block_size))
                 ul = int(uls[block_id])
                 uh = int(uhs[block_id])
-                # print("ul ",ul)
-                # print("uh",uh)
                 binary_block = binary_block.reshape((block_size, block_size))
                 reconstructed_block = np.zeros((block_size, block_size), dtype=np.uint8)
                 for k in range(block_size):
@@ -184,12 +171,7 @@ if __name__ =="__main__":
             [161,160,163,155],
             [160,159,154,154],
             [161,158,153,151]
-        ], dtype=np.uint8)
-        # mean = int(np.clip(np.mean(mat), 0, 255))
-        # mean = np.mean(mat)
-        # abs_moment = find_abs_moment(mat,mean,4*4)
-        # gamma = 16*abs_moment/2
-        
+        ], dtype=np.uint8)    
         mean_output_path="D:/git/Block_Truncation_Coding/compressed/mean.txt"
         variance_output_path="D:/git/Block_Truncation_Coding/compressed/abs_moment.txt"
         blocks_output_path="D:/git/Block_Truncation_Coding/compressed/blocks.txt"
