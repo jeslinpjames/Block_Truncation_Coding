@@ -1,7 +1,7 @@
 import cv2
 from bitarray import bitarray
 import numpy as np
-
+from check_psnr import calculate_psnr
 def load_image(path):
     try:
         img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
@@ -158,7 +158,7 @@ def reconstruct_BTC(encoded_data):
 
 
 if __name__=="__main__":
-    img = load_image("D:/git/Block_Truncation_Coding/images/synthetic.png")
+    img = load_image("D:/git/Block_Truncation_Coding/images/synthetic.bmp")
     if img is not None:
         print("Original Image Shape: ",img.shape)
         mat = np.array([
@@ -180,6 +180,10 @@ if __name__=="__main__":
         encoded_data=load_encoded_data(mean_output_path,variance_output_path,blocks_output_path,block_size=4)
         encoded_data['img_shape']=img.shape
         reconstructed_image=reconstruct_BTC(encoded_data)
-        save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/images/compressed_img.png")
+        save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/images/compressedBTC_img.bmp")
+        output_path = "D:/git/Block_Truncation_Coding/images/synthetic.bmp"
+        path2="D:/git/Block_Truncation_Coding/images/compressedBTC_img.bmp"
+        psnr_value , ps2= calculate_psnr(output_path, path2)
+        print(f"PSNR for original image and compressed image:  {ps2}")
 
     
