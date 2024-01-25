@@ -1,6 +1,7 @@
 import cv2
 from bitarray import bitarray
 import numpy as np
+from PIL import Image
 from check_psnr import calculate_psnr
 
 def load_image(path):
@@ -23,12 +24,14 @@ def display_image(img):
         cv2.destroyAllWindows()
     else:
         print("Image not found")
-
-def save_image(img,path):        
+def save_image(img, path):
     if img is not None:
-        cv2.imwrite(path,img)
+        pil_img = Image.fromarray(img)
+        pil_img = pil_img.convert('1')
+        pil_img.save(path, 'BMP', bits=1)
     else:
         print("Image not found")
+
 
 def find_abs_moment(matrix, mean, m):
     return np.sum(np.abs(matrix - mean)) / m
@@ -165,7 +168,7 @@ def reconstruct_AMBTC(encoded_data):
 
 
 if __name__ =="__main__":
-    img = load_image("D:/git/Block_Truncation_Coding/images/synthetic.png")
+    img = load_image("D:/git/Block_Truncation_Coding/images/synthetic.bmp")
     if img is not None:
         print("Original Image Shape: ",img.shape)
         mat = np.array([
@@ -186,8 +189,8 @@ if __name__ =="__main__":
         encoded_data=load_encoded_data(mean_output_path,variance_output_path,blocks_output_path,block_size=4)
         encoded_data['img_shape']=img.shape
         reconstructed_image=reconstruct_AMBTC(encoded_data)
-        save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/images/compressedAMBTC_img.png")
-        output_path = "D:/git/Block_Truncation_Coding/images/lena2.png"
-        path2="D:/git/Block_Truncation_Coding/images/compressedAMBTC_img.png"
+        save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/images/compressedAMBTC_img.bmp")
+        output_path = "D:/git/Block_Truncation_Coding/images/synthetic.bmp"
+        path2="D:/git/Block_Truncation_Coding/images/compressedAMBTC_img.bmp"
         psnr_value , ps2= calculate_psnr(output_path, path2)
         print(f"PSNR for original image and compressed image:  {ps2}")
