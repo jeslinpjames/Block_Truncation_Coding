@@ -1,6 +1,7 @@
 import cv2
 from bitarray import bitarray
 import numpy as np
+from PIL import Image
 from check_psnr import calculate_psnr
 def load_image(path):
     try:
@@ -23,9 +24,11 @@ def display_image(img):
     else:
         print("Image not found")
 
-def save_image(img,path):        
+def save_image(img, path):
     if img is not None:
-        cv2.imwrite(path,img)
+        pil_img = Image.fromarray(img)
+        pil_img = pil_img.convert('1')
+        pil_img.save(path, 'BMP', bits=1)
     else:
         print("Image not found")
 

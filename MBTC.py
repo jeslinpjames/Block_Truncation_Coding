@@ -1,6 +1,7 @@
 import cv2
 from bitarray import bitarray
 import numpy as np
+from PIL import Image
 from check_psnr import calculate_psnr
 
 def load_image(path):
@@ -24,11 +25,16 @@ def display_image(img):
     else:
         print("Image not found")
 
-def save_image(img,path):        
+def save_image(img, path):
     if img is not None:
-        cv2.imwrite(path,img)
+        pil_img = Image.fromarray(img)
+        pil_img = pil_img.convert('1')
+        pil_img.save(path, 'BMP', bits=1)
     else:
         print("Image not found")
+
+
+
 
 def to_char(value):
     if 0 <= value <= 255:
@@ -163,7 +169,7 @@ def reconstruct_MBTC(encoded_data):
 
 
 if __name__ =="__main__":
-    img = load_image("D:/git/Block_Truncation_Coding/images/synthetic.png")
+    img = load_image("D:/git/Block_Truncation_Coding/images/synthetic.bmp")
     if img is not None:
         print("Original Image Shape: ",img.shape)
         mat= np.array([
@@ -180,8 +186,8 @@ if __name__ =="__main__":
         encoded_data=load_encoded_data(uh_output_path,ul_output_path,blocks_output_path,block_size=4)
         encoded_data['img_shape']=img.shape
         reconstructed_image=reconstruct_MBTC(encoded_data)
-        save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/images/compressedMBTC_img.png")
-        output_path = "D:/git/Block_Truncation_Coding/images/synthetic.png"
-        path2="D:/git/Block_Truncation_Coding/images/compressedMBTC_img.png"
-        # psnr_value , ps2= calculate_psnr(output_path, path2)
-        # print(f"PSNR for original image and compressed image:  {ps2}")
+        save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/images/compressedMBTC_img.bmp")
+        output_path = "D:/git/Block_Truncation_Coding/images/synthetic.bmp"
+        path2="D:/git/Block_Truncation_Coding/images/compressedMBTC_img.bmp"
+        psnr_value , ps2= calculate_psnr(output_path, path2)
+        print(f"PSNR for original image and compressed image:  {ps2}")
