@@ -1,13 +1,13 @@
 import os
 from AMBTC import encode_AMBTC,reconstruct_AMBTC,load_image,save_image,save_encoded_data,load_encoded_data
 
-def apply_btc_to_folder(input_folder, output_folder, block_size=4):
+def apply_ambtc_to_folder(input_folder, output_folder, block_size=4):
     # Create output folder if it doesn't exist
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
     # List all files in the input folder
-    image_files = [f for f in os.listdir(input_folder) if f.endswith(('.jpg', '.jpeg', '.png'))]
+    image_files = [f for f in os.listdir(input_folder) if f.endswith(('.jpg', '.jpeg', '.png','.bmp'))]
 
     for image_file in image_files:
         # Construct full path for input and output images
@@ -35,9 +35,9 @@ def apply_btc_to_folder(input_folder, output_folder, block_size=4):
             reconstructed_image = reconstruct_AMBTC(loaded_data)
 
             # Save reconstructed image
-            save_image(reconstructed_image, f"{output_path}_reconstructed.png")
+            save_image(reconstructed_image, f"{output_path}_reconstructed.bmp")
 
 if __name__ == "__main__":
     input_folder = "D:/git/Block_Truncation_Coding/img"
     output_folder = "D:/git/Block_Truncation_Coding/compressed_images"
-    apply_btc_to_folder(input_folder, output_folder, block_size=4)
+    apply_ambtc_to_folder(input_folder, output_folder, block_size=4)
