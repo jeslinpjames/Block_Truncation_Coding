@@ -1,4 +1,5 @@
 import os
+from PIL import Image
 from BTC_Implementation import encode_BTC,reconstruct_BTC,load_image,save_image,save_encoded_data,load_encoded_data
 
 def apply_btc_to_folder(input_folder, output_folder, block_size=4):
@@ -7,7 +8,7 @@ def apply_btc_to_folder(input_folder, output_folder, block_size=4):
         os.makedirs(output_folder)
 
     # List all files in the input folder
-    image_files = [f for f in os.listdir(input_folder) if f.endswith(('.jpg', '.jpeg', '.png'))]
+    image_files = [f for f in os.listdir(input_folder) if f.endswith(('.jpg', '.jpeg', '.png','.bmp'))]
 
     for image_file in image_files:
         # Construct full path for input and output images
@@ -33,9 +34,9 @@ def apply_btc_to_folder(input_folder, output_folder, block_size=4):
 
             # Reconstruct image
             reconstructed_image = reconstruct_BTC(loaded_data)
-
+       
             # Save reconstructed image
-            save_image(reconstructed_image, f"{output_path}_reconstructed.png")
+            save_image(reconstructed_image, f"{output_path}_reconstructed.bmp")
 
 if __name__ == "__main__":
     input_folder = "D:/git/Block_Truncation_Coding/img"

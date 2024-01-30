@@ -24,6 +24,7 @@ def display_image(img):
         cv2.destroyAllWindows()
     else:
         print("Image not found")
+
 def save_image(img, path):
     if img is not None:
         pil_img = Image.fromarray(img)
@@ -31,7 +32,6 @@ def save_image(img, path):
         pil_img.save(path, 'BMP', bits=1)
     else:
         print("Image not found")
-
 
 def find_abs_moment(matrix, mean, m):
     return np.sum(np.abs(matrix - mean)) / m
@@ -192,5 +192,5 @@ if __name__ =="__main__":
         save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/images/compressedAMBTC_img.bmp")
         output_path = "D:/git/Block_Truncation_Coding/images/synthetic.bmp"
         path2="D:/git/Block_Truncation_Coding/images/compressedAMBTC_img.bmp"
-        psnr_value , ps2= calculate_psnr(output_path, path2)
-        print(f"PSNR for original image and compressed image:  {ps2}")
+        psnr_value = calculate_psnr(output_path, path2)
+        print(f"PSNR for original image and compressed image:  {psnr_value:.2f}")

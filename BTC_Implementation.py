@@ -93,8 +93,6 @@ def to_char(value):
 def encode_BTC(img, block_size=4):
     if img is not None:
         height, width = img.shape
-        mean_bytes = b""
-        variance_bytes = b""
         encoded_data = {
             'block_size': block_size,
             'img_shape': img.shape,
@@ -186,7 +184,7 @@ if __name__=="__main__":
         save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/images/compressedBTC_img.bmp")
         output_path = "D:/git/Block_Truncation_Coding/images/synthetic.bmp"
         path2="D:/git/Block_Truncation_Coding/images/compressedBTC_img.bmp"
-        psnr_value , ps2= calculate_psnr(output_path, path2)
-        print(f"PSNR for original image and compressed image:  {ps2}")
+        psnr_value = calculate_psnr(output_path, path2)
+        print(f"PSNR for original image and compressed image:  {psnr_value:.2f}")
 
     
