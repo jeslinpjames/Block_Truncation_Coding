@@ -182,11 +182,11 @@ if __name__ =="__main__":
         # abs_moment = find_abs_moment(mat,mean,4*4)
         # gamma = 16*abs_moment/2
         mean_output_path="D:/git/Block_Truncation_Coding/compressed/mean.txt"
-        variance_output_path="D:/git/Block_Truncation_Coding/compressed/abs_moment.txt"
+        abs_moment_output_path="D:/git/Block_Truncation_Coding/compressed/abs_moment.txt"
         blocks_output_path="D:/git/Block_Truncation_Coding/compressed/blocks.txt"
         encoded_data= encode_AMBTC(img,block_size=4)
-        save_encoded_data(encoded_data,mean_output_path,variance_output_path,blocks_output_path)
-        encoded_data=load_encoded_data(mean_output_path,variance_output_path,blocks_output_path,block_size=4)
+        save_encoded_data(encoded_data,mean_output_path,abs_moment_output_path,blocks_output_path)
+        encoded_data=load_encoded_data(mean_output_path,abs_moment_output_path,blocks_output_path,block_size=4)
         encoded_data['img_shape']=img.shape
         reconstructed_image=reconstruct_AMBTC(encoded_data)
         save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/images/compressedAMBTC_img.bmp")
