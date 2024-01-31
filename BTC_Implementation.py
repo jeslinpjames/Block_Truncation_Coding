@@ -27,8 +27,8 @@ def display_image(img):
 def save_image(img, path):
     if img is not None:
         pil_img = Image.fromarray(img)
-        pil_img = pil_img.convert('1')
-        pil_img.save(path, 'BMP', bits=1)
+        pil_img = pil_img.convert('L')
+        pil_img.save(path, 'BMP', bits=8)
     else:
         print("Image not found")
 
