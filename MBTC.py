@@ -28,8 +28,8 @@ def display_image(img):
 def save_image(img, path):
     if img is not None:
         pil_img = Image.fromarray(img)
-        pil_img = pil_img.convert('1')
-        pil_img.save(path, 'BMP', bits=1)
+        pil_img = pil_img.convert('L')
+        pil_img.save(path, 'BMP', bits=8)
     else:
         print("Image not found")
 
@@ -189,5 +189,5 @@ if __name__ =="__main__":
         save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/images/compressedMBTC_img.bmp")
         output_path = "D:/git/Block_Truncation_Coding/images/synthetic.bmp"
         path2="D:/git/Block_Truncation_Coding/images/compressedMBTC_img.bmp"
-        psnr_value , ps2= calculate_psnr(output_path, path2)
-        print(f"PSNR for original image and compressed image:  {ps2}")
+        psnr_value = calculate_psnr(output_path, path2)
+        print(f"PSNR for original image and compressed image:  {psnr_value}")
