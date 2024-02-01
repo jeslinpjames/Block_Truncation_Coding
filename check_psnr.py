@@ -40,6 +40,6 @@ if __name__ == "__main__":
         print(f"PSNR for intensity  {intensity_value:.1f}: {psnr_value:.2f}")
 
     img1 = "D:\git\Block_Truncation_Coding\images\synthetic.bmp"
-    img2 = "D:\git\Block_Truncation_Coding\images\compressedAMBTC_img.bmp"
+    img2 = "D:\git\Block_Truncation_Coding\images\compressedMBTC_img.bmp"
     psnr_value = calculate_psnr(img1, img2)
     print(f"PSNR for original image and compressed image:  {intensity_value:.1f}: {psnr_value:.2f}")
