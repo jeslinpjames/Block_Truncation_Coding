@@ -103,10 +103,10 @@ def encode_AMBTC(img, block_size=4):
             'quantized_data': []
         }
         num=0
+        m = block_size * block_size
         for i in range(0, height, block_size):
             for j in range(0, width, block_size):
                 block = img[i:i+block_size, j:j+block_size]
-                m = block_size * block_size
                 mean = np.mean(block)
                 abs_moment = find_abs_moment(block,mean,m)
                 abs_moment = int(np.clip(abs_moment, 0, 255))
