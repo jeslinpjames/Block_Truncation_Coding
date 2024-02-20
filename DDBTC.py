@@ -67,3 +67,36 @@ def floyd_steinberg_diff_matrix():
                      [3/16, 5/16, 1/16, 0, 0],
                      [0, 0, 0, 0, 0]])
 
+
+def diffuse(block, class_matrix, diff_matrix, xmin, xmax):
+    block = block.copy()
+    error = np.zeros_like(block)
+    
+    for i in range(class_matrix.shape[0]):
+        for j in range(class_matrix.shape[1]):
+            if class_matrix[i,j] != 0:
+                continue
+                
+            x = block[i,j] + error[i,j]
+            
+            if x > (xmin + xmax) / 2.:
+                y = float(xmax)  
+            else:
+                y = float(xmin)
+                
+            e = float(x) - y
+            
+            sum_weights = np.sum(diff_matrix[k,l] for k in range(diff_matrix.shape[0]) 
+                                                for l in range(diff_matrix.shape[1]) 
+                                                if class_matrix[k,l] > class_matrix[i,j])
+            
+            for k in range(diff_matrix.shape[0]):
+                for l in range(diff_matrix.shape[1]):
+                    new_i = i + k - 1
+                    new_j = j + l - 1
+                    if 0 <= new_i < error.shape[0] and 0 <= new_j < error.shape[1]:
+                        error[new_i, new_j] += (e * diff_matrix[k,l])/sum_weights
+                
+            block[i,j] = y
+            
+    return block, error
