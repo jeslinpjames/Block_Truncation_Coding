@@ -38,3 +38,17 @@ def to_char(value):
         return value.to_bytes(1, byteorder='big')
     else:
         raise ValueError("Value must be in the range 0-255")
+
+
+def load_image(path):
+    try:
+        img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+        if img is not None:
+            return img
+        else:
+            print("Image not found")
+            return None
+    except Exception as e:
+        print("Error in loading image")
+        print(e)
+        return None
