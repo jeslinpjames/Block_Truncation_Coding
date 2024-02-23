@@ -152,3 +152,35 @@ def encode_DDBTC(img, block_size=(8,8), class_matrix=None, diff_matrix=None):
         print("Image not found")
         return None
 
+
+def reconstruct_DDBTC(encoded_data):
+    if encoded_data:
+        block_size = encoded_data['block_size']
+        img_height, img_width = encoded_data['img_shape']
+        means = encoded_data['means']
+        variances = encoded_data['variances']
+        quantized_data = encoded_data['quantized_data']
+        reconstructed_image = np.zeros((img_height, img_width), dtype=np.uint8)
+        block_id =  0
+        
+        for i in range(0, img_height, block_size[0]):
+            for j in range(0, img_width, block_size[1]):
+                bit_array_block = quantized_data[block_id]
+                numpy_array = np.array(bit_array_block.tolist(), dtype=np.uint8)
+                binary_block = numpy_array.reshape((block_size[0], block_size[1]))
+                mean = int.from_bytes(means[block_id], byteorder='big')
+                variance = int.from_bytes(variances[block_id], byteorder='big')
+                xmin = int.from_bytes(encoded_data['minimums'][block_id], byteorder='big')
+                xmax = int.from_bytes(encoded_data['maximums'][block_id], byteorder='big')
+                reconstructed_block = np.where(binary_block ==  1, xmax, xmin)
+                reconstructed_image[i:i + block_size[0], j:j + block_size[1]] = reconstructed_block
+                block_id +=  1
+
+        return reconstructed_image
+
+
+img_path = "images/synthetic.png"
+img = load_image(img_path)
+out= encode_DDBTC(img)
+reconstructed_image=reconstruct_DDBTC(out)
+save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/images/compressedDDBTC_img.bmp")
