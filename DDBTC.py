@@ -100,3 +100,55 @@ def diffuse(block, class_matrix, diff_matrix, xmin, xmax):
             block[i,j] = y
             
     return block, error
+
+
+
+def encode_DDBTC(img, block_size=(8,8), class_matrix=None, diff_matrix=None):
+    if img is not None:
+        height, width = img.shape
+        encoded_data = {
+            'block_size': block_size,
+            'img_shape': img.shape,
+            'means': [],
+            'variances': [],
+            'quantized_data': [],
+            'maximums': [],
+            'minimums': [],
+        }
+
+        if class_matrix is None:
+            class_matrix = default_class_matrix()
+        if diff_matrix is None:
+            diff_matrix = floyd_steinberg_diff_matrix()
+
+        bitmap = np.zeros(img.shape)
+        out = np.zeros(img.shape)
+
+        for i in range(0, height, block_size[0]):
+            for j in range(0, width, block_size[1]):
+                block = img[i:i+block_size[0], j:j+block_size[1]]
+                xmin = block.min()
+                xmax = block.max()
+                block, error = diffuse(block, class_matrix, diff_matrix, xmin, xmax)
+                bitmap[i:i+block_size[0], j:j+block_size[1]] = (block == xmax)
+                out[i:i+block_size[0], j:j+block_size[1]] = xmin * (1 - bitmap[i:i+block_size[0], j:j+block_size[1]])
+                out[i:i+block_size[0], j:j+block_size[1]] += xmax * bitmap[i:i+block_size[0], j:j+block_size[1]]
+                encoded_data['minimums'].append(to_char(int(xmin)))
+                encoded_data['maximums'].append(to_char(int(xmax)))
+
+                # Compute and store the mean and variance for each block
+                mean = int(np.clip(np.mean(block),  0,  255))
+                variance = int(np.clip(np.std(block),  0,  255))
+                encoded_data['means'].append(to_char(mean))
+                encoded_data['variances'].append(to_char(variance))
+
+                # Quantize the block and store it
+                binary_block = (block >= mean).astype(np.uint8)
+                bit_array_block = bitarray(binary_block.flatten().tolist())
+                encoded_data['quantized_data'].append(bit_array_block)
+
+        return encoded_data
+    else:
+        print("Image not found")
+        return None
+
