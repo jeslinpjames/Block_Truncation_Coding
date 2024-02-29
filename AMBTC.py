@@ -168,7 +168,7 @@ def reconstruct_AMBTC(encoded_data):
 
 
 if __name__ =="__main__":
-    img = load_image("D:/git/Block_Truncation_Coding/images/synthetic.bmp")
+    img = load_image("images/synthetic.bmp")
     if img is not None:
         print("Original Image Shape: ",img.shape)
         mat = np.array([
@@ -181,16 +181,16 @@ if __name__ =="__main__":
         # mean = np.mean(mat)
         # abs_moment = find_abs_moment(mat,mean,4*4)
         # gamma = 16*abs_moment/2
-        mean_output_path="D:/git/Block_Truncation_Coding/compressed/mean.txt"
-        abs_moment_output_path="D:/git/Block_Truncation_Coding/compressed/abs_moment.txt"
-        blocks_output_path="D:/git/Block_Truncation_Coding/compressed/blocks.txt"
+        mean_output_path="compressed/mean.txt"
+        abs_moment_output_path="compressed/abs_moment.txt"
+        blocks_output_path="compressed/blocks.txt"
         encoded_data= encode_AMBTC(img,block_size=4)
         save_encoded_data(encoded_data,mean_output_path,abs_moment_output_path,blocks_output_path)
         encoded_data=load_encoded_data(mean_output_path,abs_moment_output_path,blocks_output_path,block_size=4)
         encoded_data['img_shape']=img.shape
         reconstructed_image=reconstruct_AMBTC(encoded_data)
-        save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/images/compressedAMBTC_img.bmp")
-        output_path = "D:/git/Block_Truncation_Coding/images/synthetic.bmp"
-        path2="D:/git/Block_Truncation_Coding/images/compressedAMBTC_img.bmp"
+        save_image(reconstructed_image, "images/compressedAMBTC_img.bmp")
+        output_path = "images/synthetic.bmp"
+        path2="images/compressedAMBTC_img.bmp"
         psnr_value = calculate_psnr(output_path, path2)
         print(f"PSNR for original image and compressed image:  {psnr_value:.2f}")
