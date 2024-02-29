@@ -1,8 +1,8 @@
 import numpy as np
-from skimage.util import view_as_blocks
 import cv2
 from bitarray import bitarray
 from PIL import Image
+from check_psnr import calculate_psnr
 
 def load_image(path):
     try:
@@ -109,8 +109,6 @@ def encode_DDBTC(img, block_size=(8,8), class_matrix=None, diff_matrix=None):
         encoded_data = {
             'block_size': block_size,
             'img_shape': img.shape,
-            'means': [],
-            'variances': [],
             'quantized_data': [],
             'maximums': [],
             'minimums': [],
@@ -135,13 +133,7 @@ def encode_DDBTC(img, block_size=(8,8), class_matrix=None, diff_matrix=None):
                 out[i:i+block_size[0], j:j+block_size[1]] += xmax * bitmap[i:i+block_size[0], j:j+block_size[1]]
                 encoded_data['minimums'].append(to_char(int(xmin)))
                 encoded_data['maximums'].append(to_char(int(xmax)))
-
-                # Compute and store the mean and variance for each block
-                mean = int(np.clip(np.mean(block),  0,  255))
-                variance = int(np.clip(np.std(block),  0,  255))
-                encoded_data['means'].append(to_char(mean))
-                encoded_data['variances'].append(to_char(variance))
-
+                mean = np.mean(block)
                 # Quantize the block and store it
                 binary_block = (block >= mean).astype(np.uint8)
                 bit_array_block = bitarray(binary_block.flatten().tolist())
@@ -157,8 +149,6 @@ def reconstruct_DDBTC(encoded_data):
     if encoded_data:
         block_size = encoded_data['block_size']
         img_height, img_width = encoded_data['img_shape']
-        means = encoded_data['means']
-        variances = encoded_data['variances']
         quantized_data = encoded_data['quantized_data']
         reconstructed_image = np.zeros((img_height, img_width), dtype=np.uint8)
         block_id =  0
@@ -168,8 +158,6 @@ def reconstruct_DDBTC(encoded_data):
                 bit_array_block = quantized_data[block_id]
                 numpy_array = np.array(bit_array_block.tolist(), dtype=np.uint8)
                 binary_block = numpy_array.reshape((block_size[0], block_size[1]))
-                mean = int.from_bytes(means[block_id], byteorder='big')
-                variance = int.from_bytes(variances[block_id], byteorder='big')
                 xmin = int.from_bytes(encoded_data['minimums'][block_id], byteorder='big')
                 xmax = int.from_bytes(encoded_data['maximums'][block_id], byteorder='big')
                 reconstructed_block = np.where(binary_block ==  1, xmax, xmin)
@@ -178,9 +166,22 @@ def reconstruct_DDBTC(encoded_data):
 
         return reconstructed_image
 
+if __name__ =="__main__":
+    img = load_image("images/synthetic.bmp")
+    if img is not None:
+        print("Original Image Shape: ",img.shape)
+        mat = np.array([
+            [121,114,56,47],
+            [37,200,247,255],
+            [16,0,12,169],
+            [43,5,7,251]
+        ], dtype=np.uint8)
+        encoded_data= encode_DDBTC(img)
 
-img_path = "images/synthetic.png"
-img = load_image(img_path)
-out= encode_DDBTC(img)
-reconstructed_image=reconstruct_DDBTC(out)
-save_image(reconstructed_image, "D:/git/Block_Truncation_Coding/images/compressedDDBTC_img.bmp")
+        encoded_data['img_shape']=img.shape
+        reconstructed_image=reconstruct_DDBTC(encoded_data)
+        save_image(reconstructed_image, "images/compressedDDBTC_img.bmp")
+        output_path = "images/synthetic.bmp"
+        path2="images/compressedDDBTC_img.bmp"
+        psnr_value = calculate_psnr(output_path, path2)
+        print(f"PSNR for original image and compressed image:  {psnr_value:.2f}")
