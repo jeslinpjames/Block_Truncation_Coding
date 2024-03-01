@@ -53,14 +53,15 @@ def load_image(path):
         print(e)
         return None
 def default_class_matrix(size=(8,8)):
-    return np.array([[ 63 , 55 , 47 , 39 , 31 , 23 , 15 , 7],  
-                     [ 62 , 54 , 46 , 38 , 30 , 22 , 14 , 6],
-                     [ 61 , 53 , 45 , 37 , 29 , 21 , 13 , 5],
-                     [ 60 , 52 , 44 , 36 , 28 , 20 , 12 , 4],
-                     [ 59 , 51 , 43 , 35 , 27 , 19 , 11 , 3],
-                     [ 58 , 50 , 42 , 34 , 26 , 18 , 10 , 2],
-                     [ 57 , 49 , 41 , 33 , 25 , 17 , 9  , 1],
-                     [ 56 , 48 , 40 , 32 , 24 , 16 , 8  , 0]])  
+    return np.array([[35, 28,  0, 47, 34, 32, 37, 21],
+                   [10, 59, 18, 60, 41, 27, 12, 33],
+                   [58, 36,  8, 25,  6, 49, 43, 26],
+                   [16, 29,  2, 44, 38, 15, 19, 56],
+                   [17, 42, 20, 50, 55, 24, 30, 13],
+                   [39, 14,  7, 61, 22,  1, 57, 54],
+                   [51, 31, 45,  9, 40, 11, 53,  4],
+                   [23, 62, 63, 52,  5, 48, 46,  3]]
+                  )
 
 def floyd_steinberg_diff_matrix():
     return np.array([[0, 0, 0, 7/16, 1/16],  
@@ -144,7 +145,6 @@ def encode_DDBTC(img, block_size=(8,8), class_matrix=None, diff_matrix=None):
         print("Image not found")
         return None
 
-
 def reconstruct_DDBTC(encoded_data):
     if encoded_data:
         block_size = encoded_data['block_size']
@@ -165,7 +165,7 @@ def reconstruct_DDBTC(encoded_data):
                 block_id +=  1
 
         return reconstructed_image
-
+    
 if __name__ =="__main__":
     img = load_image("images/synthetic.bmp")
     if img is not None:
@@ -176,9 +176,12 @@ if __name__ =="__main__":
             [16,0,12,169],
             [43,5,7,251]
         ], dtype=np.uint8)
+        max_output_path="compressed/max.txt"
+        min_output_path="compressed/min.txt"
+        blocks_output_path="compressed/blocks.txt"
         encoded_data= encode_DDBTC(img)
-
-        encoded_data['img_shape']=img.shape
+        # save_encoded_data(encoded_data,max_output_path,min_output_path,blocks_output_path)
+        # encoded_data=load_encoded_data(max_output_path,min_output_path,blocks_output_path,img,block_size=(8,8))
         reconstructed_image=reconstruct_DDBTC(encoded_data)
         save_image(reconstructed_image, "images/compressedDDBTC_img.bmp")
         output_path = "images/synthetic.bmp"
