@@ -228,12 +228,19 @@ if __name__ =="__main__":
             [16,0,12,169],
             [43,5,7,251]
         ], dtype=np.uint8)
+        class_mat = np.array([[14, 0, 11, 1],
+                              [5, 8, 2, 15],
+                              [6, 10, 12, 3],
+                              [4, 9, 13, 7]])
+        diffmat = np.array([[0, 0, 0, 7/16],
+                   [3/16, 5/16, 1/16, 0],
+                   [0, 0, 0, 0]])
         max_output_path="compressed/max.txt"
         min_output_path="compressed/min.txt"
         blocks_output_path="compressed/blocks.txt"
-        encoded_data= encode_DDBTC(img)
+        encoded_data= encode_DDBTC(img, block_size=(4,4),class_matrix=class_mat,diff_matrix=diffmat)
         save_encoded_data(encoded_data,max_output_path,min_output_path,blocks_output_path)
-        encoded_data=load_encoded_data(max_output_path,min_output_path,blocks_output_path,img,block_size=(8,8))
+        encoded_data=load_encoded_data(max_output_path,min_output_path,blocks_output_path,img,block_size=(4,4))
         reconstructed_image=reconstruct_DDBTC(encoded_data)
         save_image(reconstructed_image, "images/compressedDDBTC_img.bmp")
         output_path = "images/synthetic.bmp"
