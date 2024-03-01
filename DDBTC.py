@@ -52,6 +52,26 @@ def load_image(path):
         print("Error in loading image")
         print(e)
         return None
+    
+def save_encoded_data(encoded_data, max_path,min_path,blocks_path):
+    if encoded_data:
+        try:
+            with open(max_path, 'wb') as f:
+                for max in encoded_data['maximums']:
+                    f.write(max)
+            with open(min_path, 'wb') as f:
+                for min in encoded_data['minimums']:
+                    f.write(min)
+            with open(blocks_path, 'wb') as f:
+                for block in encoded_data['quantized_data']:
+                    block.tofile(f)
+            print("Encoded data saved successfully")
+        except Exception as e:
+            print("Error in saving encoded data")
+            print(e)
+
+
+
 def default_class_matrix(size=(8,8)):
     return np.array([[35, 28,  0, 47, 34, 32, 37, 21],
                    [10, 59, 18, 60, 41, 27, 12, 33],
@@ -180,8 +200,8 @@ if __name__ =="__main__":
         min_output_path="compressed/min.txt"
         blocks_output_path="compressed/blocks.txt"
         encoded_data= encode_DDBTC(img)
-        # save_encoded_data(encoded_data,max_output_path,min_output_path,blocks_output_path)
-        # encoded_data=load_encoded_data(max_output_path,min_output_path,blocks_output_path,img,block_size=(8,8))
+        save_encoded_data(encoded_data,max_output_path,min_output_path,blocks_output_path)
+        encoded_data=load_encoded_data(max_output_path,min_output_path,blocks_output_path,img,block_size=(8,8))
         reconstructed_image=reconstruct_DDBTC(encoded_data)
         save_image(reconstructed_image, "images/compressedDDBTC_img.bmp")
         output_path = "images/synthetic.bmp"
