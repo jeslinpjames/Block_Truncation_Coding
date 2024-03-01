@@ -70,6 +70,38 @@ def save_encoded_data(encoded_data, max_path,min_path,blocks_path):
             print("Error in saving encoded data")
             print(e)
 
+def load_encoded_data(max_path, min_path, blocks_path, img,block_size=(8,8)):
+    try:
+        encoded_data = {
+            'block_size': block_size,
+            'img_shape': img.shape,
+            'maximums': [],
+            'minimums': [],
+            'quantized_data': []
+        }
+        with open(max_path, 'rb') as f:
+            encoded_data['maximums'] = list(f.read())
+        with open(min_path, 'rb') as f:
+            encoded_data['minimums'] = list(f.read())
+        with open(blocks_path, 'rb') as f:
+            # Read bytes from the file
+            size = block_size[0] * block_size[1]
+            size = size // 8 
+            byte_block = f.read(size)     
+            while byte_block:
+                # Convert bytes to bitarray
+                bit_array_block = bitarray()
+                bit_array_block.frombytes(byte_block) 
+                # Append the bitarray block to the list
+                encoded_data['quantized_data'].append(bit_array_block)
+                # Read the next block
+                byte_block = f.read(size)
+        print("Encoded data loaded successfully")
+        return encoded_data
+    except Exception as e:
+        print("Error in loading encoded data")
+        print(e)
+        return None
 
 
 def default_class_matrix(size=(8,8)):
@@ -178,8 +210,8 @@ def reconstruct_DDBTC(encoded_data):
                 bit_array_block = quantized_data[block_id]
                 numpy_array = np.array(bit_array_block.tolist(), dtype=np.uint8)
                 binary_block = numpy_array.reshape((block_size[0], block_size[1]))
-                xmin = int.from_bytes(encoded_data['minimums'][block_id], byteorder='big')
-                xmax = int.from_bytes(encoded_data['maximums'][block_id], byteorder='big')
+                xmin = encoded_data['minimums'][block_id]
+                xmax = encoded_data['maximums'][block_id]
                 reconstructed_block = np.where(binary_block ==  1, xmax, xmin)
                 reconstructed_image[i:i + block_size[0], j:j + block_size[1]] = reconstructed_block
                 block_id +=  1
