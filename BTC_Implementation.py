@@ -129,7 +129,7 @@ def reconstruct_BTC(encoded_data):
             for j in range(0, img_width, block_size):
                 bit_array_block = quantized_data[block_id]
                 numpy_array = np.array(bit_array_block.tolist(), dtype=np.uint8)
-                binary_block = numpy_array.reshape((4, 4))
+                binary_block = numpy_array.reshape((block_size, block_size))
                 q = np.sum(binary_block)
                 mean = means[block_id]
                 variance = variances[block_id]
